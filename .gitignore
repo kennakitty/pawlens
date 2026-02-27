@@ -38,6 +38,5 @@ Thumbs.db
 *.swp
 *.swo
 
-# Replit
-.replit
+# Replit (replit.nix excluded but .replit config kept in repo)
 replit.nix
