@@ -1,11 +1,11 @@
-import { DatabaseSync } from "node:sqlite";
+import Database from "better-sqlite3";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = join(__dirname, "../pawlens.db");
 
-const db = new DatabaseSync(DB_PATH);
+const db = new Database(DB_PATH);
 
 // Create all tables if they don't exist yet
 db.exec(`
