@@ -50,7 +50,7 @@ YOUR GUIDELINES:
         "X-Title": "PawLens"
       },
       body: JSON.stringify({
-        model: "anthropic/claude-haiku",
+        model: "anthropic/claude-haiku-4-5-20251001",
         max_tokens: 1500,
         messages: [
           { role: "system", content: systemPrompt },
