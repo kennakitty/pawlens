@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import colors from "../colors.js";
 import ProductDetail from "./ProductDetail.jsx";
 
@@ -8,6 +8,9 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
   const [error, setError] = useState("");
   const [filterBrand, setFilterBrand] = useState("All");
   const [filterLifeStage, setFilterLifeStage] = useState("All");
+  const [filterFoodType, setFilterFoodType] = useState("All");
+  const [filterHealth, setFilterHealth] = useState("All");
+  const [filterBreed, setFilterBreed] = useState("All");
   const [filterSort, setFilterSort] = useState("name");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -31,13 +34,35 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
     );
   }
 
-  const brands = ["All", ...Array.from(new Set(products.map(p => p.brand).filter(Boolean))).sort()];
-  const lifeStages = ["All", ...Array.from(new Set(products.map(p => p.lifeStage).filter(Boolean))).sort()];
+  // Build filter options dynamically from actual data
+  const brands = useMemo(() => ["All", ...Array.from(new Set(products.map(p => p.brand).filter(Boolean))).sort()], [products]);
+  const lifeStages = useMemo(() => ["All", ...Array.from(new Set(products.map(p => p.lifeStage).filter(Boolean))).sort()], [products]);
+  const foodTypes = useMemo(() => ["All", ...Array.from(new Set(products.map(p => p.foodType).filter(Boolean))).sort()], [products]);
+  const healthOptions = useMemo(() => {
+    const all = new Set();
+    products.forEach(p => (p.healthConsiderations || []).forEach(h => all.add(h)));
+    return ["All", ...[...all].sort()];
+  }, [products]);
+  const breedOptions = useMemo(() => {
+    const all = new Set();
+    products.forEach(p => { if (p.breed) all.add(p.breed); });
+    return all.size > 0 ? ["All", ...[...all].sort()] : [];
+  }, [products]);
+
+  // Parse kcal/cup for calorie sorting
+  function getCaloriesPerCup(p) {
+    if (!p.calorieContent) return null;
+    const match = p.calorieContent.match(/(\d+)\s*kcal\/cup/i);
+    return match ? parseInt(match[1]) : null;
+  }
 
   const filtered = products
     .filter(p => {
       if (filterBrand !== "All" && p.brand !== filterBrand) return false;
       if (filterLifeStage !== "All" && p.lifeStage !== filterLifeStage) return false;
+      if (filterFoodType !== "All" && p.foodType !== filterFoodType) return false;
+      if (filterHealth !== "All" && !(p.healthConsiderations || []).includes(filterHealth)) return false;
+      if (filterBreed !== "All" && p.breed !== filterBreed) return false;
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         if (!p.name?.toLowerCase().includes(term) && !p.brand?.toLowerCase().includes(term) && !p.flavor?.toLowerCase().includes(term)) return false;
@@ -47,10 +72,34 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
     .sort((a, b) => {
       if (filterSort === "name") return (a.name || "").localeCompare(b.name || "");
       if (filterSort === "brand") return (a.brand || "").localeCompare(b.brand || "");
+      if (filterSort === "cal-low") {
+        const ca = getCaloriesPerCup(a) ?? 9999;
+        const cb = getCaloriesPerCup(b) ?? 9999;
+        return ca - cb;
+      }
+      if (filterSort === "cal-high") {
+        const ca = getCaloriesPerCup(a) ?? 0;
+        const cb = getCaloriesPerCup(b) ?? 0;
+        return cb - ca;
+      }
       return 0;
     });
 
+  // Count active filters
+  const activeFilterCount = [filterBrand, filterLifeStage, filterFoodType, filterHealth, filterBreed]
+    .filter(f => f !== "All").length + (searchTerm ? 1 : 0);
+
   const selectStyle = { padding: "8px 12px", border: `1px solid ${colors.border}`, borderRadius: 8, fontSize: 13, fontFamily: "'Nunito', sans-serif", background: "#fff" };
+
+  function clearFilters() {
+    setFilterBrand("All");
+    setFilterLifeStage("All");
+    setFilterFoodType("All");
+    setFilterHealth("All");
+    setFilterBreed("All");
+    setSearchTerm("");
+    setFilterSort("name");
+  }
 
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 20px" }}>
@@ -73,10 +122,32 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
         <select value={filterLifeStage} onChange={e => setFilterLifeStage(e.target.value)} style={selectStyle}>
           {lifeStages.map(l => <option key={l} value={l}>{l === "All" ? "All Life Stages" : l}</option>)}
         </select>
+        <select value={filterFoodType} onChange={e => setFilterFoodType(e.target.value)} style={selectStyle}>
+          {foodTypes.map(f => <option key={f} value={f}>{f === "All" ? "All Food Types" : f}</option>)}
+        </select>
+        <select value={filterHealth} onChange={e => setFilterHealth(e.target.value)} style={selectStyle}>
+          {healthOptions.map(h => <option key={h} value={h}>{h === "All" ? "All Health Focus" : h}</option>)}
+        </select>
+        {breedOptions.length > 0 && (
+          <select value={filterBreed} onChange={e => setFilterBreed(e.target.value)} style={selectStyle}>
+            {breedOptions.map(b => <option key={b} value={b}>{b === "All" ? "All Breeds" : b}</option>)}
+          </select>
+        )}
         <select value={filterSort} onChange={e => setFilterSort(e.target.value)} style={selectStyle}>
           <option value="name">Sort: Name A-Z</option>
           <option value="brand">Sort: Brand A-Z</option>
+          <option value="cal-low">Sort: Calories Low→High</option>
+          <option value="cal-high">Sort: Calories High→Low</option>
         </select>
+        {activeFilterCount > 0 && (
+          <button onClick={clearFilters} style={{
+            padding: "8px 14px", border: "none", borderRadius: 8, fontSize: 13,
+            fontFamily: "'Nunito', sans-serif", fontWeight: 600,
+            background: colors.accentLight, color: colors.accent, cursor: "pointer"
+          }}>
+            Clear {activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""}
+          </button>
+        )}
       </div>
 
       {error && <p style={{ color: colors.poor, textAlign: "center", padding: 20 }}>{error}</p>}
@@ -102,7 +173,8 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
                 {p.flavor && <p style={{ fontSize: 12, color: colors.textMed, margin: "0 0 8px" }}>Flavor: {p.flavor}</p>}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8 }}>
                   {p.foodType && <span style={{ padding: "2px 8px", background: colors.bg, borderRadius: 6, fontSize: 11, color: colors.textMed }}>{p.foodType}</span>}
-                  {p.healthConsiderations?.slice(0, 2).map((hc, i) => (
+                  {p.breed && <span style={{ padding: "2px 8px", background: colors.neutralBg, borderRadius: 6, fontSize: 11, color: colors.neutral }}>{p.breed}</span>}
+                  {(p.healthConsiderations || []).slice(0, 2).map((hc, i) => (
                     <span key={i} style={{ padding: "2px 8px", background: colors.primaryLight, borderRadius: 6, fontSize: 11, color: colors.primary }}>{hc}</span>
                   ))}
                 </div>

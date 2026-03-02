@@ -25,7 +25,7 @@ db.exec(`
     retailer TEXT DEFAULT 'PetSmart',
     lifeStage TEXT,
     foodType TEXT,
-    breedSize TEXT,
+    breed TEXT,
     flavor TEXT,
 
     -- Nutrition (all stored as raw text, no parsed numbers)

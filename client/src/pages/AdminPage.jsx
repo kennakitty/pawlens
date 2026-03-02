@@ -3,7 +3,7 @@ import colors from "../colors.js";
 
 const EMPTY_PRODUCT = {
   name: "", brand: "", type: "Dry", lifeStage: "", retailer: "PetSmart",
-  foodType: "", breedSize: "", flavor: "",
+  foodType: "", breed: "", flavor: "",
   fullIngredients: "", guaranteedAnalysis: "", calorieContent: "", aafco: "",
   nutritionalOptions: "", healthConsiderations: "",
   benefits: "", description: "", directions: "",
@@ -255,7 +255,7 @@ export default function AdminPage() {
               </select>
             </Field>
             <Field name="Breed Size">
-              <input value={f.breedSize} onChange={e => set("breedSize", e.target.value)} placeholder="e.g. All Breeds, Large Breed" style={inputStyle()} />
+              <input value={f.breed} onChange={e => set("breed", e.target.value)} placeholder="e.g. Maine Coon, Persian, Siamese" style={inputStyle()} />
             </Field>
             <Field name="Retailer"><input value={f.retailer} onChange={e => set("retailer", e.target.value)} style={inputStyle()} /></Field>
             <Field name="Calorie Content" note="e.g. 387 kcal/cup"><input value={f.calorieContent} onChange={e => set("calorieContent", e.target.value)} style={inputStyle()} /></Field>

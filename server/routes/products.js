@@ -6,7 +6,7 @@ const router = Router();
 // All columns in the products table (for insert/update)
 const PRODUCT_COLUMNS = [
   "name", "brand", "sku", "petsmartUrl", "imageUrl", "gtin13",
-  "type", "retailer", "lifeStage", "foodType", "breedSize", "flavor",
+  "type", "retailer", "lifeStage", "foodType", "breed", "flavor",
   "fullIngredients", "guaranteedAnalysis", "calorieContent", "aafco",
   "nutritionalOptions", "healthConsiderations",
   "benefits", "description", "directions",
@@ -17,7 +17,7 @@ const PRODUCT_COLUMNS = [
 
 // GET /api/products — list all products with optional filters
 router.get("/", (req, res) => {
-  const { brand, lifeStage, foodType, breedSize, sort = "name", search } = req.query;
+  const { brand, lifeStage, foodType, breed, sort = "name", search } = req.query;
 
   let query = "SELECT * FROM products WHERE 1=1";
   const params = [];
@@ -34,9 +34,9 @@ router.get("/", (req, res) => {
     query += " AND foodType = ?";
     params.push(foodType);
   }
-  if (breedSize && breedSize !== "All") {
-    query += " AND breedSize = ?";
-    params.push(breedSize);
+  if (breed && breed !== "All") {
+    query += " AND breed = ?";
+    params.push(breed);
   }
   if (search) {
     query += " AND (name LIKE ? OR brand LIKE ? OR flavor LIKE ?)";
@@ -56,8 +56,8 @@ router.get("/filters", (req, res) => {
   const brands = db.prepare("SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL ORDER BY brand").all().map(r => r.brand);
   const lifeStages = db.prepare("SELECT DISTINCT lifeStage FROM products WHERE lifeStage IS NOT NULL ORDER BY lifeStage").all().map(r => r.lifeStage);
   const foodTypes = db.prepare("SELECT DISTINCT foodType FROM products WHERE foodType IS NOT NULL ORDER BY foodType").all().map(r => r.foodType);
-  const breedSizes = db.prepare("SELECT DISTINCT breedSize FROM products WHERE breedSize IS NOT NULL ORDER BY breedSize").all().map(r => r.breedSize);
-  res.json({ brands, lifeStages, foodTypes, breedSizes });
+  const breeds = db.prepare("SELECT DISTINCT breed FROM products WHERE breed IS NOT NULL ORDER BY breed").all().map(r => r.breed);
+  res.json({ brands, lifeStages, foodTypes, breeds });
 });
 
 // GET /api/products/:id — single product
