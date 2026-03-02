@@ -186,7 +186,7 @@ export default function AdminPage() {
   if (!authed) {
     return (
       <div style={{ maxWidth: 400, margin: "80px auto", padding: "0 20px", textAlign: "center" }}>
-        <h2 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 28, color: colors.primary, marginBottom: 8 }}>Admin Panel</h2>
+        <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 28, color: colors.primary, marginBottom: 8 }}>Admin Panel</h2>
         <p style={{ color: colors.textMed, fontSize: 14, marginBottom: 24 }}>Enter your admin password to continue.</p>
         <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 12, padding: 24 }}>
           <input
@@ -209,7 +209,7 @@ export default function AdminPage() {
 
   const sectionHeader = (title, onAdd) => (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-      <h2 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, color: colors.primary, margin: 0 }}>{title}</h2>
+      <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 24, color: colors.primary, margin: 0 }}>{title}</h2>
       <div style={{ display: "flex", gap: 8 }}>
         <button onClick={onAdd} style={{ padding: "8px 16px", background: colors.primary, color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
           + Add New
@@ -230,7 +230,7 @@ export default function AdminPage() {
         <button onClick={() => setEditingProduct(null)} style={{ background: "none", border: "none", color: colors.primary, cursor: "pointer", fontSize: 14, fontWeight: 500, marginBottom: 20, padding: 0, fontFamily: "inherit" }}>
           ← Back to products
         </button>
-        <h2 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, color: colors.primary, marginBottom: 24 }}>
+        <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 24, color: colors.primary, marginBottom: 24 }}>
           {editingProduct === "new" ? "Add New Product" : "Edit Product"}
         </h2>
         <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 12, padding: 28 }}>
@@ -347,7 +347,7 @@ export default function AdminPage() {
         <button onClick={() => setEditingIngredient(null)} style={{ background: "none", border: "none", color: colors.primary, cursor: "pointer", fontSize: 14, fontWeight: 500, marginBottom: 20, padding: 0, fontFamily: "inherit" }}>
           ← Back to ingredients
         </button>
-        <h2 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, color: colors.primary, marginBottom: 24 }}>
+        <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 24, color: colors.primary, marginBottom: 24 }}>
           {editingIngredient === "new" ? "Add New Ingredient" : "Edit Ingredient"}
         </h2>
         <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 12, padding: 28 }}>

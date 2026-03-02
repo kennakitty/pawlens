@@ -101,6 +101,31 @@ const redFlags = [
   { title: "Vague Recall History", severity: "high", description: "Some brands have had significant recalls for contamination, excess vitamins, or foreign materials — issues that indicate quality control problems at the manufacturer.", whatToLookFor: "Search '[brand name] recall' before buying. Check FDA's pet food recall database. A single recall isn't necessarily disqualifying, but patterns of recalls are a serious red flag." }
 ];
 
+// ─── DROP AND RECREATE INGREDIENTS + RED FLAGS (clean slate every seed) ───────
+db.exec("DROP TABLE IF EXISTS ingredients");
+db.exec(`
+  CREATE TABLE IF NOT EXISTS ingredients (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    rating TEXT,
+    category TEXT,
+    explanation TEXT,
+    misleading TEXT,
+    healthNotes TEXT
+  )
+`);
+
+db.exec("DROP TABLE IF EXISTS red_flags");
+db.exec(`
+  CREATE TABLE IF NOT EXISTS red_flags (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL UNIQUE,
+    severity TEXT,
+    description TEXT,
+    whatToLookFor TEXT
+  )
+`);
+
 // ─── INSERT DATA ──────────────────────────────────────────────────────────────
 const insertIngredient = db.prepare(`
   INSERT OR IGNORE INTO ingredients (name, rating, category, explanation, misleading, healthNotes)
@@ -144,8 +169,6 @@ for (const p of products) {
 }
 
 // Seed reference data
-db.exec("DELETE FROM ingredients");
-db.exec("DELETE FROM red_flags");
 for (const i of ingredients) insertIngredient.run(i);
 for (const f of redFlags) insertRedFlag.run(f);
 
