@@ -3,9 +3,21 @@ import db, { parseProduct, serializeProduct } from "../db.js";
 
 const router = Router();
 
+// All columns in the products table (for insert/update)
+const PRODUCT_COLUMNS = [
+  "name", "brand", "sku", "petsmartUrl", "imageUrl", "gtin13",
+  "type", "retailer", "lifeStage", "foodType", "breedSize", "flavor",
+  "fullIngredients", "guaranteedAnalysis", "calorieContent", "aafco",
+  "nutritionalOptions", "healthConsiderations",
+  "benefits", "description", "directions",
+  "extraAttributes",
+  "transparencyScore", "concerns", "bestFor", "avoid", "keyFeatures",
+  "recallHistory", "country", "lastUpdated"
+];
+
 // GET /api/products — list all products with optional filters
 router.get("/", (req, res) => {
-  const { brand, lifeStage, sort = "transparencyScore", search } = req.query;
+  const { brand, lifeStage, foodType, breedSize, sort = "name", search } = req.query;
 
   let query = "SELECT * FROM products WHERE 1=1";
   const params = [];
@@ -18,17 +30,34 @@ router.get("/", (req, res) => {
     query += " AND lifeStage = ?";
     params.push(lifeStage);
   }
+  if (foodType && foodType !== "All") {
+    query += " AND foodType = ?";
+    params.push(foodType);
+  }
+  if (breedSize && breedSize !== "All") {
+    query += " AND breedSize = ?";
+    params.push(breedSize);
+  }
   if (search) {
-    query += " AND (name LIKE ? OR brand LIKE ?)";
-    params.push(`%${search}%`, `%${search}%`);
+    query += " AND (name LIKE ? OR brand LIKE ? OR flavor LIKE ?)";
+    params.push(`%${search}%`, `%${search}%`, `%${search}%`);
   }
 
-  const validSorts = { transparencyScore: "DESC", proteinPct: "DESC", fatPct: "ASC", name: "ASC" };
-  const dir = validSorts[sort] || "DESC";
-  query += ` ORDER BY ${Object.keys(validSorts).includes(sort) ? sort : "transparencyScore"} ${dir}`;
+  const validSorts = { name: "ASC", brand: "ASC", lifeStage: "ASC", transparencyScore: "DESC" };
+  const dir = validSorts[sort] || "ASC";
+  query += ` ORDER BY ${Object.keys(validSorts).includes(sort) ? sort : "name"} ${dir}`;
 
   const rows = db.prepare(query).all(...params);
   res.json(rows.map(parseProduct));
+});
+
+// GET /api/products/filters — get available filter values
+router.get("/filters", (req, res) => {
+  const brands = db.prepare("SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL ORDER BY brand").all().map(r => r.brand);
+  const lifeStages = db.prepare("SELECT DISTINCT lifeStage FROM products WHERE lifeStage IS NOT NULL ORDER BY lifeStage").all().map(r => r.lifeStage);
+  const foodTypes = db.prepare("SELECT DISTINCT foodType FROM products WHERE foodType IS NOT NULL ORDER BY foodType").all().map(r => r.foodType);
+  const breedSizes = db.prepare("SELECT DISTINCT breedSize FROM products WHERE breedSize IS NOT NULL ORDER BY breedSize").all().map(r => r.breedSize);
+  res.json({ brands, lifeStages, foodTypes, breedSizes });
 });
 
 // GET /api/products/:id — single product
@@ -38,22 +67,14 @@ router.get("/:id", (req, res) => {
   res.json(parseProduct(row));
 });
 
-// POST /api/products — create product (admin only — middleware applied in index.js)
+// POST /api/products — create product (admin only)
 router.post("/", (req, res) => {
   const data = serializeProduct(req.body);
-  const result = db.prepare(`
-    INSERT INTO products (
-      name, brand, line, type, lifeStage, retailer, priceRange,
-      sizes, proteinPct, fatPct, fiberPct, moisturePct, calPerCup,
-      firstIngredients, keyFeatures, concerns, transparencyScore,
-      aafco, bestFor, avoid, recallHistory, country
-    ) VALUES (
-      @name, @brand, @line, @type, @lifeStage, @retailer, @priceRange,
-      @sizes, @proteinPct, @fatPct, @fiberPct, @moisturePct, @calPerCup,
-      @firstIngredients, @keyFeatures, @concerns, @transparencyScore,
-      @aafco, @bestFor, @avoid, @recallHistory, @country
-    )
-  `).run(data);
+  const cols = PRODUCT_COLUMNS.filter(c => data[c] !== undefined);
+  const placeholders = cols.map(c => `@${c}`).join(", ");
+  const result = db.prepare(
+    `INSERT INTO products (${cols.join(", ")}) VALUES (${placeholders})`
+  ).run(data);
   const created = db.prepare("SELECT * FROM products WHERE id = ?").get(result.lastInsertRowid);
   res.status(201).json(parseProduct(created));
 });
@@ -64,18 +85,9 @@ router.put("/:id", (req, res) => {
   if (!existing) return res.status(404).json({ error: "Product not found" });
 
   const data = serializeProduct(req.body);
-  db.prepare(`
-    UPDATE products SET
-      name=@name, brand=@brand, line=@line, type=@type, lifeStage=@lifeStage,
-      retailer=@retailer, priceRange=@priceRange, sizes=@sizes,
-      proteinPct=@proteinPct, fatPct=@fatPct, fiberPct=@fiberPct,
-      moisturePct=@moisturePct, calPerCup=@calPerCup,
-      firstIngredients=@firstIngredients, keyFeatures=@keyFeatures,
-      concerns=@concerns, transparencyScore=@transparencyScore,
-      aafco=@aafco, bestFor=@bestFor, avoid=@avoid,
-      recallHistory=@recallHistory, country=@country
-    WHERE id=@id
-  `).run({ ...data, id: req.params.id });
+  const cols = PRODUCT_COLUMNS.filter(c => data[c] !== undefined);
+  const setClause = cols.map(c => `${c}=@${c}`).join(", ");
+  db.prepare(`UPDATE products SET ${setClause} WHERE id=@id`).run({ ...data, id: req.params.id });
 
   const updated = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
   res.json(parseProduct(updated));

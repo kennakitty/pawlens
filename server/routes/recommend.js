@@ -17,28 +17,42 @@ router.post("/", async (req, res) => {
     });
   }
 
-  // Fetch all products to include in the AI context
-  const products = db.prepare("SELECT * FROM products ORDER BY transparencyScore DESC").all().map(parseProduct);
+  // Fetch all products with rich context for AI
+  const products = db.prepare("SELECT * FROM products ORDER BY brand, name").all().map(parseProduct);
   const productList = products
-    .map(p => `- ${p.name} (${p.brand}): Protein ${p.proteinPct}%, Fat ${p.fatPct}%, Fiber ${p.fiberPct}%, ${p.calPerCup} cal/cup, Score ${p.transparencyScore}/10`)
-    .join("\n");
+    .map(p => {
+      const parts = [`**${p.name}** (${p.brand})`];
+      if (p.lifeStage) parts.push(`Life Stage: ${p.lifeStage}`);
+      if (p.flavor) parts.push(`Flavor: ${p.flavor}`);
+      if (p.foodType) parts.push(`Type: ${p.foodType}`);
+      if (p.guaranteedAnalysis) parts.push(`Guaranteed Analysis: ${p.guaranteedAnalysis}`);
+      if (p.fullIngredients) parts.push(`Ingredients: ${p.fullIngredients}`);
+      if (p.calorieContent) parts.push(`Calories: ${p.calorieContent}`);
+      if (p.healthConsiderations?.length) parts.push(`Health: ${p.healthConsiderations.join(", ")}`);
+      if (p.nutritionalOptions?.length) parts.push(`Nutrition: ${p.nutritionalOptions.join(", ")}`);
+      if (p.benefits?.length) parts.push(`Benefits: ${p.benefits.join("; ")}`);
+      return parts.join(" | ");
+    })
+    .join("\n\n");
 
   const systemPrompt = `You are PawLens, a warm, knowledgeable cat nutrition advisor who cuts through misleading pet food marketing to give honest, personalized advice. You are not generic — every response feels written for THIS specific person's cat(s).
 
-PRODUCT DATABASE (current PetSmart dry cat food inventory):
+PRODUCT DATABASE (${products.length} PetSmart dry cat foods):
 ${productList}
 
 YOUR GUIDELINES:
 1. Only recommend products from the database above — never make up products
 2. Think creatively: suggest combination feeding (mixing two foods), rotation feeding, timed feeders, puzzle feeders when relevant
-3. Always explain WHY a food works for this specific cat — mention specific protein %, fat %, ingredients that matter
+3. Always explain WHY a food works for this specific cat — reference the actual guaranteed analysis, specific ingredients, and calorie content
 4. Flag if the cat's current food has issues — be honest but kind
 5. Handle multi-cat households thoughtfully — address each cat's needs individually
 6. If recommending a mix of foods, explain the ratios and why
 7. Note anything worth discussing with their vet
 8. Format with clear sections: Top Recommendations, Why These Work, What to Avoid, Pro Tips
 9. Never shift recommendations without explaining why — be consistent and transparent
-10. Keep it conversational, not clinical. No corporate speak.`;
+10. Keep it conversational, not clinical. No corporate speak.
+11. When comparing foods, cite the actual ingredient lists and GA numbers — show your work
+12. Consider health considerations and nutritional options tags when matching to cat needs`;
 
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {

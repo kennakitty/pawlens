@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import colors from "../colors.js";
 
 const EMPTY_PRODUCT = {
-  name: "", brand: "", line: "", type: "Dry", lifeStage: "Adult", retailer: "PetSmart",
-  priceRange: "", sizes: "", proteinPct: "", fatPct: "", fiberPct: "", moisturePct: "",
-  calPerCup: "", firstIngredients: "", keyFeatures: "", concerns: "",
-  transparencyScore: "", aafco: "", bestFor: "", avoid: "", recallHistory: "", country: "USA"
+  name: "", brand: "", type: "Dry", lifeStage: "", retailer: "PetSmart",
+  foodType: "", breedSize: "", flavor: "",
+  fullIngredients: "", guaranteedAnalysis: "", calorieContent: "", aafco: "",
+  nutritionalOptions: "", healthConsiderations: "",
+  benefits: "", description: "", directions: "",
+  keyFeatures: "", concerns: "", bestFor: "", avoid: "",
+  recallHistory: "", country: "USA"
 };
 
 const EMPTY_INGREDIENT = {
@@ -38,7 +41,7 @@ function Field({ name, note, children }) {
 
 // Convert array fields to/from comma-separated strings for the form
 function toForm(product) {
-  const arrFields = ["sizes", "firstIngredients", "keyFeatures", "concerns", "bestFor", "avoid"];
+  const arrFields = ["nutritionalOptions", "healthConsiderations", "benefits", "keyFeatures", "concerns", "bestFor", "avoid"];
   const out = { ...product };
   for (const f of arrFields) {
     if (Array.isArray(out[f])) out[f] = out[f].join(", ");
@@ -47,17 +50,11 @@ function toForm(product) {
 }
 
 function fromForm(form) {
-  const arrFields = ["sizes", "firstIngredients", "keyFeatures", "concerns", "bestFor", "avoid"];
+  const arrFields = ["nutritionalOptions", "healthConsiderations", "benefits", "keyFeatures", "concerns", "bestFor", "avoid"];
   const out = { ...form };
   for (const f of arrFields) {
     if (typeof out[f] === "string") out[f] = out[f].split(",").map(s => s.trim()).filter(Boolean);
   }
-  out.proteinPct = parseFloat(out.proteinPct) || 0;
-  out.fatPct = parseFloat(out.fatPct) || 0;
-  out.fiberPct = parseFloat(out.fiberPct) || 0;
-  out.moisturePct = parseFloat(out.moisturePct) || 0;
-  out.calPerCup = parseInt(out.calPerCup) || 0;
-  out.transparencyScore = parseFloat(out.transparencyScore) || 0;
   return out;
 }
 
@@ -242,29 +239,64 @@ export default function AdminPage() {
               <Field name="Product Name *"><input value={f.name} onChange={e => set("name", e.target.value)} style={inputStyle()} /></Field>
             </div>
             <Field name="Brand *"><input value={f.brand} onChange={e => set("brand", e.target.value)} style={inputStyle()} /></Field>
-            <Field name="Product Line"><input value={f.line} onChange={e => set("line", e.target.value)} style={inputStyle()} /></Field>
+            <Field name="Flavor"><input value={f.flavor} onChange={e => set("flavor", e.target.value)} style={inputStyle()} /></Field>
             <Field name="Life Stage">
               <select value={f.lifeStage} onChange={e => set("lifeStage", e.target.value)} style={inputStyle()}>
+                <option value="">Select...</option>
                 {["Kitten", "Adult", "Senior (7+)", "Senior (11+)", "Senior (12+)", "All Life Stages"].map(s => <option key={s}>{s}</option>)}
               </select>
+            </Field>
+            <Field name="Food Type">
+              <input value={f.foodType} onChange={e => set("foodType", e.target.value)} placeholder="e.g. Grain-Free, Natural" style={inputStyle()} />
             </Field>
             <Field name="Type">
               <select value={f.type} onChange={e => set("type", e.target.value)} style={inputStyle()}>
                 {["Dry", "Wet", "Freeze-Dried", "Raw"].map(s => <option key={s}>{s}</option>)}
               </select>
             </Field>
+            <Field name="Breed Size">
+              <input value={f.breedSize} onChange={e => set("breedSize", e.target.value)} placeholder="e.g. All Breeds, Large Breed" style={inputStyle()} />
+            </Field>
             <Field name="Retailer"><input value={f.retailer} onChange={e => set("retailer", e.target.value)} style={inputStyle()} /></Field>
-            <Field name="Price Range" note="e.g. $24.99 - $49.99"><input value={f.priceRange} onChange={e => set("priceRange", e.target.value)} style={inputStyle()} /></Field>
-            <Field name="Sizes" note="comma-separated"><input value={f.sizes} onChange={e => set("sizes", e.target.value)} placeholder="3.2 lb, 5.5 lb, 13 lb" style={inputStyle()} /></Field>
-            <Field name="Protein %"><input type="number" value={f.proteinPct} onChange={e => set("proteinPct", e.target.value)} style={inputStyle()} /></Field>
-            <Field name="Fat %"><input type="number" value={f.fatPct} onChange={e => set("fatPct", e.target.value)} style={inputStyle()} /></Field>
-            <Field name="Fiber %"><input type="number" value={f.fiberPct} onChange={e => set("fiberPct", e.target.value)} style={inputStyle()} /></Field>
-            <Field name="Moisture %"><input type="number" value={f.moisturePct} onChange={e => set("moisturePct", e.target.value)} style={inputStyle()} /></Field>
-            <Field name="Cal/Cup"><input type="number" value={f.calPerCup} onChange={e => set("calPerCup", e.target.value)} style={inputStyle()} /></Field>
-            <Field name="Transparency Score" note="0–10"><input type="number" step="0.1" min="0" max="10" value={f.transparencyScore} onChange={e => set("transparencyScore", e.target.value)} style={inputStyle()} /></Field>
+            <Field name="Calorie Content" note="e.g. 387 kcal/cup"><input value={f.calorieContent} onChange={e => set("calorieContent", e.target.value)} style={inputStyle()} /></Field>
             <div style={{ gridColumn: "1 / -1" }}>
-              <Field name="First 5 Ingredients" note="comma-separated">
-                <input value={f.firstIngredients} onChange={e => set("firstIngredients", e.target.value)} placeholder="Chicken, Chicken Meal, Brown Rice, ..." style={inputStyle()} />
+              <Field name="Full Ingredients">
+                <textarea value={f.fullIngredients} onChange={e => set("fullIngredients", e.target.value)} placeholder="Chicken, Chicken Meal, Brown Rice, ..." style={inputStyle({ minHeight: 100, resize: "vertical" })} />
+              </Field>
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <Field name="Guaranteed Analysis">
+                <textarea value={f.guaranteedAnalysis} onChange={e => set("guaranteedAnalysis", e.target.value)} placeholder="Crude Protein (Min) 38.0%, Crude Fat (Min) 14.0%, ..." style={inputStyle({ minHeight: 80, resize: "vertical" })} />
+              </Field>
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <Field name="Description">
+                <textarea value={f.description} onChange={e => set("description", e.target.value)} style={inputStyle({ minHeight: 80, resize: "vertical" })} />
+              </Field>
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <Field name="Benefits" note="comma-separated">
+                <textarea value={f.benefits} onChange={e => set("benefits", e.target.value)} placeholder="Supports immune health, High protein for lean muscles, ..." style={inputStyle({ minHeight: 70, resize: "vertical" })} />
+              </Field>
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <Field name="Health Considerations" note="comma-separated">
+                <textarea value={f.healthConsiderations} onChange={e => set("healthConsiderations", e.target.value)} placeholder="Digestive Health, Immune Support, ..." style={inputStyle({ minHeight: 50, resize: "vertical" })} />
+              </Field>
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <Field name="Nutritional Options" note="comma-separated">
+                <textarea value={f.nutritionalOptions} onChange={e => set("nutritionalOptions", e.target.value)} placeholder="High-Protein, Real Meat, ..." style={inputStyle({ minHeight: 50, resize: "vertical" })} />
+              </Field>
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <Field name="Directions">
+                <textarea value={f.directions} onChange={e => set("directions", e.target.value)} style={inputStyle({ minHeight: 60, resize: "vertical" })} />
+              </Field>
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <Field name="AAFCO Statement">
+                <input value={f.aafco} onChange={e => set("aafco", e.target.value)} style={inputStyle()} />
               </Field>
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
@@ -285,11 +317,6 @@ export default function AdminPage() {
             <div style={{ gridColumn: "1 / -1" }}>
               <Field name="Avoid If" note="comma-separated">
                 <textarea value={f.avoid} onChange={e => set("avoid", e.target.value)} style={inputStyle({ minHeight: 70, resize: "vertical" })} />
-              </Field>
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <Field name="AAFCO Statement">
-                <input value={f.aafco} onChange={e => set("aafco", e.target.value)} style={inputStyle()} />
               </Field>
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
@@ -353,13 +380,13 @@ export default function AdminPage() {
   }
 
   // ── Main admin list ───────────────────────────────────────────────────────
-  const tabBtn = (id, label) => (
+  const tabBtn = (id, lbl) => (
     <button onClick={() => setTab(id)} style={{
       padding: "8px 20px", border: "none", cursor: "pointer", borderRadius: 8, fontSize: 13, fontWeight: 500,
       background: tab === id ? colors.primaryLight : "transparent",
       color: tab === id ? colors.primary : colors.textMed, fontFamily: "inherit"
     }}>
-      {label}
+      {lbl}
     </button>
   );
 
@@ -386,7 +413,9 @@ export default function AdminPage() {
                   <div>
                     <span style={{ fontSize: 11, color: colors.accent, fontWeight: 600, textTransform: "uppercase" }}>{p.brand}</span>
                     <p style={{ fontSize: 14, fontWeight: 600, color: colors.text, margin: "2px 0 0" }}>{p.name}</p>
-                    <p style={{ fontSize: 12, color: colors.textLight, margin: "2px 0 0" }}>{p.lifeStage} · Score: {p.transparencyScore}/10</p>
+                    <p style={{ fontSize: 12, color: colors.textLight, margin: "2px 0 0" }}>
+                      {[p.lifeStage, p.flavor, p.foodType].filter(Boolean).join(" · ")}
+                    </p>
                   </div>
                   <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                     <button onClick={() => startEditProduct(p)} style={{ padding: "6px 14px", background: colors.primaryLight, color: colors.primary, border: "none", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Edit</button>

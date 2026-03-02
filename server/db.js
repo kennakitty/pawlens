@@ -11,28 +11,52 @@ const db = new Database(DB_PATH);
 db.exec(`
   CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    -- Identity & source
     name TEXT NOT NULL,
     brand TEXT,
-    line TEXT,
+    sku TEXT,
+    petsmartUrl TEXT,
+    imageUrl TEXT,
+    gtin13 TEXT,
+
+    -- Classification
     type TEXT DEFAULT 'Dry',
-    lifeStage TEXT,
     retailer TEXT DEFAULT 'PetSmart',
-    priceRange TEXT,
-    sizes TEXT,
-    proteinPct REAL,
-    fatPct REAL,
-    fiberPct REAL,
-    moisturePct REAL,
-    calPerCup INTEGER,
-    firstIngredients TEXT,
-    keyFeatures TEXT,
-    concerns TEXT,
-    transparencyScore REAL,
+    lifeStage TEXT,
+    foodType TEXT,
+    breedSize TEXT,
+    flavor TEXT,
+
+    -- Nutrition (all stored as raw text, no parsed numbers)
+    fullIngredients TEXT,
+    guaranteedAnalysis TEXT,
+    calorieContent TEXT,
     aafco TEXT,
+
+    -- Product attributes (from PetSmart attribute section)
+    nutritionalOptions TEXT,
+    healthConsiderations TEXT,
+
+    -- Content
+    benefits TEXT,
+    description TEXT,
+    directions TEXT,
+
+    -- Dynamic attributes (catches any extra headings not in fixed columns)
+    extraAttributes TEXT,
+
+    -- PawLens-specific (populated later / manually)
+    transparencyScore REAL,
+    concerns TEXT,
     bestFor TEXT,
     avoid TEXT,
+    keyFeatures TEXT,
     recallHistory TEXT,
-    country TEXT
+    country TEXT,
+
+    -- Metadata
+    lastUpdated TEXT
   );
 
   CREATE TABLE IF NOT EXISTS ingredients (
@@ -54,25 +78,35 @@ db.exec(`
   );
 `);
 
+// JSON array fields that get parsed when reading from DB
+const JSON_ARRAY_FIELDS = [
+  "nutritionalOptions", "healthConsiderations", "benefits",
+  "concerns", "bestFor", "avoid", "keyFeatures"
+];
+
+// JSON object fields
+const JSON_OBJECT_FIELDS = ["extraAttributes"];
+
 // Helper: parse JSON fields on product rows coming out of the database
 export function parseProduct(row) {
   if (!row) return null;
-  return {
-    ...row,
-    sizes: JSON.parse(row.sizes || "[]"),
-    firstIngredients: JSON.parse(row.firstIngredients || "[]"),
-    keyFeatures: JSON.parse(row.keyFeatures || "[]"),
-    concerns: JSON.parse(row.concerns || "[]"),
-    bestFor: JSON.parse(row.bestFor || "[]"),
-    avoid: JSON.parse(row.avoid || "[]"),
-  };
+  const out = { ...row };
+  for (const field of JSON_ARRAY_FIELDS) {
+    out[field] = JSON.parse(out[field] || "[]");
+  }
+  for (const field of JSON_OBJECT_FIELDS) {
+    out[field] = JSON.parse(out[field] || "{}");
+  }
+  return out;
 }
 
-// Helper: stringify array fields before saving to database
+// Helper: stringify array/object fields before saving to database
 export function serializeProduct(data) {
   const out = { ...data };
-  for (const field of ["sizes", "firstIngredients", "keyFeatures", "concerns", "bestFor", "avoid"]) {
-    if (Array.isArray(out[field])) out[field] = JSON.stringify(out[field]);
+  for (const field of [...JSON_ARRAY_FIELDS, ...JSON_OBJECT_FIELDS]) {
+    if (typeof out[field] === "object" && out[field] !== null) {
+      out[field] = JSON.stringify(out[field]);
+    }
   }
   return out;
 }
