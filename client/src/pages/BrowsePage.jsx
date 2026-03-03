@@ -7,7 +7,7 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filterBrand, setFilterBrand] = useState("All");
-  const [filterLifeStages, setFilterLifeStages] = useState([]);
+  const [filterLifeStage, setFilterLifeStage] = useState("All");
   const [filterFoodType, setFilterFoodType] = useState("All");
   const [filterHealth, setFilterHealth] = useState("All");
   const [filterBreed, setFilterBreed] = useState("All");
@@ -36,7 +36,7 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
 
   // Build filter options dynamically from actual data
   const brands = useMemo(() => ["All", ...Array.from(new Set(products.map(p => p.brand).filter(Boolean))).sort()], [products]);
-  const lifeStages = useMemo(() => Array.from(new Set(products.map(p => p.lifeStage).filter(Boolean))).sort(), [products]);
+  const lifeStages = useMemo(() => ["All", ...Array.from(new Set(products.map(p => p.lifeStage).filter(Boolean))).sort()], [products]);
   const foodTypes = useMemo(() => ["All", ...Array.from(new Set(products.map(p => p.foodType).filter(Boolean))).sort()], [products]);
   const healthOptions = useMemo(() => {
     const all = new Set();
@@ -59,7 +59,7 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
   const filtered = products
     .filter(p => {
       if (filterBrand !== "All" && p.brand !== filterBrand) return false;
-      if (filterLifeStages.length > 0 && !filterLifeStages.includes(p.lifeStage)) return false;
+      if (filterLifeStage !== "All" && p.lifeStage !== filterLifeStage) return false;
       if (filterFoodType !== "All" && p.foodType !== filterFoodType) return false;
       if (filterHealth !== "All" && !(p.healthConsiderations || []).includes(filterHealth)) return false;
       if (filterBreed !== "All" && p.breed !== filterBreed) return false;
@@ -92,14 +92,14 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
     });
 
   // Count active filters
-  const activeFilterCount = [filterBrand, filterFoodType, filterHealth, filterBreed]
-    .filter(f => f !== "All").length + (filterLifeStages.length > 0 ? 1 : 0) + (searchTerm ? 1 : 0);
+  const activeFilterCount = [filterBrand, filterLifeStage, filterFoodType, filterHealth, filterBreed]
+    .filter(f => f !== "All").length + (searchTerm ? 1 : 0);
 
   const selectStyle = { padding: "8px 12px", border: `1px solid ${colors.border}`, borderRadius: 8, fontSize: 13, fontFamily: "'Nunito', sans-serif", background: "#fff" };
 
   function clearFilters() {
     setFilterBrand("All");
-    setFilterLifeStages([]);
+    setFilterLifeStage("All");
     setFilterFoodType("All");
     setFilterHealth("All");
     setFilterBreed("All");
@@ -125,22 +125,9 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
         <select value={filterBrand} onChange={e => setFilterBrand(e.target.value)} style={selectStyle}>
           {brands.map(b => <option key={b} value={b}>{b === "All" ? "All Brands" : b}</option>)}
         </select>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12, color: colors.textMed, fontFamily: "'Nunito', sans-serif" }}>Life Stage:</span>
-          {lifeStages.map(l => {
-            const active = filterLifeStages.includes(l);
-            return (
-              <button key={l} onClick={() => setFilterLifeStages(prev => active ? prev.filter(s => s !== l) : [...prev, l])}
-                style={{
-                  padding: "4px 10px", borderRadius: 14, fontSize: 12, fontFamily: "'Nunito', sans-serif", fontWeight: active ? 600 : 400, cursor: "pointer", border: "none",
-                  background: active ? colors.primaryLight : colors.bg, color: active ? colors.primary : colors.textMed,
-                  outline: active ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`, outlineOffset: -1,
-                }}>
-                {l}
-              </button>
-            );
-          })}
-        </div>
+        <select value={filterLifeStage} onChange={e => setFilterLifeStage(e.target.value)} style={selectStyle}>
+          {lifeStages.map(l => <option key={l} value={l}>{l === "All" ? "Life Stage ▾" : l}</option>)}
+        </select>
         <select value={filterFoodType} onChange={e => setFilterFoodType(e.target.value)} style={selectStyle}>
           {foodTypes.map(f => <option key={f} value={f}>{f === "All" ? "All Food Types" : f}</option>)}
         </select>
