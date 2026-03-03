@@ -126,7 +126,7 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
           {brands.map(b => <option key={b} value={b}>{b === "All" ? "All Brands" : b}</option>)}
         </select>
         <select value={filterLifeStage} onChange={e => setFilterLifeStage(e.target.value)} style={selectStyle}>
-          {lifeStages.map(l => <option key={l} value={l}>{l === "All" ? "All Life Stages" : l}</option>)}
+          {lifeStages.map(l => <option key={l} value={l}>{l === "All" ? "Any Life Stage" : l}</option>)}
         </select>
         <select value={filterFoodType} onChange={e => setFilterFoodType(e.target.value)} style={selectStyle}>
           {foodTypes.map(f => <option key={f} value={f}>{f === "All" ? "All Food Types" : f}</option>)}
@@ -182,7 +182,7 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
                       const scoreColor = s >= 75 ? colors.good : s >= 50 ? colors.caution : colors.poor;
                       const scoreBg = s >= 75 ? colors.goodBg : s >= 50 ? colors.cautionBg : colors.poorBg;
                       return (
-                        <span style={{ padding: "2px 8px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: scoreColor, background: scoreBg }}>{s}</span>
+                        <span style={{ padding: "2px 8px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: scoreColor, background: scoreBg }}>{s}<span style={{ fontWeight: 400, fontSize: 10 }}>/100</span></span>
                       );
                     })()}
                   </div>
