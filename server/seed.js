@@ -187,4 +187,44 @@ if (redFlagCount === 0) {
   console.log(`Red flags already exist (${redFlagCount}). Skipping.`);
 }
 
+// ─── TRANSPARENCY SCORES ─────────────────────────────────────────────────────
+// Calculate scores for any products that don't have one yet
+const unscoredCount = db.prepare("SELECT COUNT(*) as count FROM products WHERE transparencyScore IS NULL").get().count;
+if (unscoredCount > 0) {
+  const GOOD_FIRST = ["chicken","turkey","salmon","tuna","duck","lamb","venison","rabbit","trout","whitefish","herring","pollock","deboned","fish","beef","pork"];
+  const RED_FLAGS = ["by-product","by product","corn gluten meal","soybean meal","animal fat","meat and bone meal","animal digest","artificial","bha","bht","ethoxyquin","propylene glycol","food coloring","red 40","yellow 5","yellow 6","blue 2","caramel color","menadione","sodium bisulfite"];
+  const FILLERS = ["ground yellow corn","corn","wheat","soy flour","brewers rice","wheat flour","corn starch","tapioca starch","powdered cellulose"];
+  const PREMIUM = ["deboned","fresh","raw","freeze-dried","whole","organic","wild-caught","free-range","cage-free","probiotics","prebiotics","l-carnitine","glucosamine","chondroitin","taurine","omega"];
+
+  function scoreProduct(p) {
+    let s = 50;
+    const ing = (p.fullIngredients || "").toLowerCase();
+    const ga = (p.guaranteedAnalysis || "").toLowerCase();
+    const aafco = (p.aafco || "").toLowerCase();
+    const nutrOpts = JSON.parse(p.nutritionalOptions || "[]");
+    const first = ing.split(",")[0] || "";
+    if (GOOD_FIRST.some(g => first.includes(g))) s += 15;
+    else if (FILLERS.some(f => first.includes(f))) s -= 10;
+    let rf = 0; for (const f of RED_FLAGS) { if (ing.includes(f)) rf++; } s -= Math.min(rf * 5, 20);
+    let fc = 0; for (const f of FILLERS) { if (ing.includes(f)) fc++; } s -= Math.min(fc * 3, 10);
+    let pc = 0; for (const sig of PREMIUM) { if (ing.includes(sig)) pc++; } s += Math.min(pc * 3, 15);
+    if (ing.length > 50) s += 2; if (ga.length > 30) s += 2; if (aafco.length > 10) s += 2;
+    if (p.calorieContent) s += 2; if (p.description) s += 2;
+    const noFiller = ["No Corn","No Wheat","No Soy","Grain Free","Gluten Free"];
+    let nc = 0; for (const c of noFiller) { if (nutrOpts.includes(c)) nc++; } s += Math.min(nc * 2, 10);
+    const pm = ga.match(/protein.*?(\d+\.?\d*)%/);
+    if (pm) { const pv = parseFloat(pm[1]); if (pv >= 40) s += 5; else if (pv >= 35) s += 3; else if (pv >= 30) s += 1; }
+    return Math.max(0, Math.min(100, Math.round(s)));
+  }
+
+  const allProducts = db.prepare("SELECT * FROM products WHERE transparencyScore IS NULL").all();
+  const updateScore = db.prepare("UPDATE products SET transparencyScore = ? WHERE id = ?");
+  db.exec("BEGIN");
+  for (const p of allProducts) updateScore.run(scoreProduct(p), p.id);
+  db.exec("COMMIT");
+  console.log(`Scored ${allProducts.length} products`);
+} else {
+  console.log("Transparency scores already calculated. Skipping.");
+}
+
 console.log("Database ready!");

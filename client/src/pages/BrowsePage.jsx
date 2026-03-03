@@ -82,6 +82,12 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
         const cb = getCaloriesPerCup(b) ?? 0;
         return cb - ca;
       }
+      if (filterSort === "score-high") {
+        return (b.transparencyScore ?? 0) - (a.transparencyScore ?? 0);
+      }
+      if (filterSort === "score-low") {
+        return (a.transparencyScore ?? 0) - (b.transparencyScore ?? 0);
+      }
       return 0;
     });
 
@@ -138,6 +144,8 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
           <option value="brand">Sort: Brand A-Z</option>
           <option value="cal-low">Sort: Calories Low→High</option>
           <option value="cal-high">Sort: Calories High→Low</option>
+          <option value="score-high">Sort: Score High→Low</option>
+          <option value="score-low">Sort: Score Low→High</option>
         </select>
         {activeFilterCount > 0 && (
           <button onClick={clearFilters} style={{
@@ -167,7 +175,17 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                   <span style={{ fontSize: 11, fontWeight: 600, color: colors.accent, textTransform: "uppercase", letterSpacing: 0.5 }}>{p.brand}</span>
-                  {p.lifeStage && <span style={{ fontSize: 11, color: colors.textMed }}>{p.lifeStage}</span>}
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    {p.lifeStage && <span style={{ fontSize: 11, color: colors.textMed }}>{p.lifeStage}</span>}
+                    {p.transparencyScore != null && (() => {
+                      const s = p.transparencyScore;
+                      const scoreColor = s >= 75 ? colors.good : s >= 50 ? colors.caution : colors.poor;
+                      const scoreBg = s >= 75 ? colors.goodBg : s >= 50 ? colors.cautionBg : colors.poorBg;
+                      return (
+                        <span style={{ padding: "2px 8px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: scoreColor, background: scoreBg }}>{s}</span>
+                      );
+                    })()}
+                  </div>
                 </div>
                 <h3 style={{ fontSize: 15, fontWeight: 600, color: colors.text, margin: "0 0 8px", lineHeight: 1.3 }}>{p.name}</h3>
                 {p.flavor && <p style={{ fontSize: 12, color: colors.textMed, margin: "0 0 8px" }}>Flavor: {p.flavor}</p>}
