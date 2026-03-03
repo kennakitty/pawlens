@@ -36,7 +36,11 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
 
   // Build filter options dynamically from actual data
   const brands = useMemo(() => ["All", ...Array.from(new Set(products.map(p => p.brand).filter(Boolean))).sort()], [products]);
-  const lifeStages = useMemo(() => ["All", ...Array.from(new Set(products.map(p => p.lifeStage).filter(Boolean))).sort()], [products]);
+  const lifeStageOrder = ["Kitten", "All Life Stages", "Adult", "Senior (7+)", "Senior (11+)"];
+  const lifeStages = useMemo(() => {
+    const available = new Set(products.map(p => p.lifeStage).filter(Boolean));
+    return ["All", ...lifeStageOrder.filter(s => available.has(s))];
+  }, [products]);
   const foodTypes = useMemo(() => ["All", ...Array.from(new Set(products.map(p => p.foodType).filter(Boolean))).sort()], [products]);
   const healthOptions = useMemo(() => {
     const all = new Set();
