@@ -130,7 +130,7 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
           {brands.map(b => <option key={b} value={b}>{b === "All" ? "All Brands" : b}</option>)}
         </select>
         <select value={filterLifeStage} onChange={e => setFilterLifeStage(e.target.value)} style={selectStyle}>
-          {lifeStages.map(l => <option key={l} value={l}>{l === "All" ? "Life Stage ▾" : l}</option>)}
+          {lifeStages.map(l => <option key={l} value={l}>{l === "All" ? "Choose Life Stage" : l}</option>)}
         </select>
         <select value={filterFoodType} onChange={e => setFilterFoodType(e.target.value)} style={selectStyle}>
           {foodTypes.map(f => <option key={f} value={f}>{f === "All" ? "All Food Types" : f}</option>)}
