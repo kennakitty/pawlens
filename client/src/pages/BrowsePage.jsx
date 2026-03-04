@@ -21,6 +21,26 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
       .catch(() => { setError("Failed to load products."); setLoading(false); });
   }, []);
 
+  // Build filter options dynamically from actual data
+  // All hooks must be called before any conditional return (Rules of Hooks)
+  const brands = useMemo(() => ["All", ...Array.from(new Set(products.map(p => p.brand).filter(Boolean))).sort()], [products]);
+  const lifeStageOrder = ["Kitten", "All Life Stages", "Adult", "Senior (7+)", "Senior (11+)"];
+  const lifeStages = useMemo(() => {
+    const available = new Set(products.map(p => p.lifeStage).filter(Boolean));
+    return ["All", ...lifeStageOrder.filter(s => available.has(s))];
+  }, [products]);
+  const foodTypes = useMemo(() => ["All", ...Array.from(new Set(products.map(p => p.foodType).filter(Boolean))).sort()], [products]);
+  const healthOptions = useMemo(() => {
+    const all = new Set();
+    products.forEach(p => (Array.isArray(p.healthConsiderations) ? p.healthConsiderations : []).forEach(h => all.add(h)));
+    return ["All", ...[...all].sort()];
+  }, [products]);
+  const breedOptions = useMemo(() => {
+    const all = new Set();
+    products.forEach(p => { if (p.breed) all.add(p.breed); });
+    return all.size > 0 ? ["All", ...[...all].sort()] : [];
+  }, [products]);
+
   if (selectedProduct) {
     return (
       <ProductDetail
@@ -34,25 +54,6 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
     );
   }
 
-  // Build filter options dynamically from actual data
-  const brands = useMemo(() => ["All", ...Array.from(new Set(products.map(p => p.brand).filter(Boolean))).sort()], [products]);
-  const lifeStageOrder = ["Kitten", "All Life Stages", "Adult", "Senior (7+)", "Senior (11+)"];
-  const lifeStages = useMemo(() => {
-    const available = new Set(products.map(p => p.lifeStage).filter(Boolean));
-    return ["All", ...lifeStageOrder.filter(s => available.has(s))];
-  }, [products]);
-  const foodTypes = useMemo(() => ["All", ...Array.from(new Set(products.map(p => p.foodType).filter(Boolean))).sort()], [products]);
-  const healthOptions = useMemo(() => {
-    const all = new Set();
-    products.forEach(p => (p.healthConsiderations || []).forEach(h => all.add(h)));
-    return ["All", ...[...all].sort()];
-  }, [products]);
-  const breedOptions = useMemo(() => {
-    const all = new Set();
-    products.forEach(p => { if (p.breed) all.add(p.breed); });
-    return all.size > 0 ? ["All", ...[...all].sort()] : [];
-  }, [products]);
-
   // Parse kcal/cup for calorie sorting
   function getCaloriesPerCup(p) {
     if (!p.calorieContent) return null;
@@ -65,7 +66,7 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
       if (filterBrand !== "All" && p.brand !== filterBrand) return false;
       if (filterLifeStage !== "All" && p.lifeStage !== filterLifeStage) return false;
       if (filterFoodType !== "All" && p.foodType !== filterFoodType) return false;
-      if (filterHealth !== "All" && !(p.healthConsiderations || []).includes(filterHealth)) return false;
+      if (filterHealth !== "All" && !(Array.isArray(p.healthConsiderations) ? p.healthConsiderations : []).includes(filterHealth)) return false;
       if (filterBreed !== "All" && p.breed !== filterBreed) return false;
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
@@ -196,7 +197,7 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8 }}>
                   {p.foodType && <span style={{ padding: "2px 8px", background: colors.bg, borderRadius: 6, fontSize: 11, color: colors.textMed }}>{p.foodType}</span>}
                   {p.breed && <span style={{ padding: "2px 8px", background: colors.neutralBg, borderRadius: 6, fontSize: 11, color: colors.neutral }}>{p.breed}</span>}
-                  {(p.healthConsiderations || []).slice(0, 2).map((hc, i) => (
+                  {(Array.isArray(p.healthConsiderations) ? p.healthConsiderations : []).slice(0, 2).map((hc, i) => (
                     <span key={i} style={{ padding: "2px 8px", background: colors.primaryLight, borderRadius: 6, fontSize: 11, color: colors.primary }}>{hc}</span>
                   ))}
                 </div>
