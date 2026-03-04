@@ -3,10 +3,10 @@ import { Search, FlaskConical, BarChart3, AlertTriangle } from "lucide-react";
 
 export default function HomePage({ navigate }) {
   const features = [
-    { icon: <Search size={24} color={colors.primary} />, title: "Tell Us About Your Cat", desc: "Describe your cat's breed, age, health needs, and preferences. Our AI thinks outside the box to find creative solutions." },
-    { icon: <FlaskConical size={24} color={colors.primary} />, title: "Decode Any Ingredient", desc: "Plain-language explanations of what's actually in cat food and what the labels don't tell you." },
-    { icon: <BarChart3 size={24} color={colors.primary} />, title: "Real Nutritional Data", desc: "Every product backed by actual guaranteed analysis numbers — not marketing claims or pretty packaging." },
-    { icon: <AlertTriangle size={24} color={colors.primary} />, title: "Red Flag Alerts", desc: "Recalls, misleading claims, and ingredients to watch — the stuff brands hope you won't notice." }
+    { icon: <Search size={24} color={colors.primary} />, title: "Tell Us About Your Cat", desc: "Describe your cat's breed, age, health needs, and preferences. Our AI thinks outside the box to find creative solutions.", page: "recommend" },
+    { icon: <FlaskConical size={24} color={colors.primary} />, title: "Decode Any Ingredient", desc: "Plain-language explanations of what's actually in cat food and what the labels don't tell you.", page: "ingredients" },
+    { icon: <BarChart3 size={24} color={colors.primary} />, title: "Real Nutritional Data", desc: "Every product backed by actual guaranteed analysis numbers — not marketing claims or pretty packaging.", page: "browse" },
+    { icon: <AlertTriangle size={24} color={colors.primary} />, title: "Red Flag Alerts", desc: "Recalls, misleading claims, and ingredients to watch — the stuff brands hope you won't notice.", page: "redflags" }
   ];
 
   return (
@@ -40,10 +40,15 @@ export default function HomePage({ navigate }) {
         {/* Supporting cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {features.slice(1).map((card, i) => (
-            <div key={i} style={{
-              background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 24,
-              boxShadow: "0 2px 12px rgba(44,62,58,0.06)"
-            }}>
+            <div key={i}
+              onClick={() => navigate(card.page)}
+              style={{
+                background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 24,
+                boxShadow: "0 2px 12px rgba(44,62,58,0.06)", cursor: "pointer", transition: "box-shadow 0.15s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.boxShadow = "0 4px 20px rgba(91,138,114,0.15)"}
+              onMouseLeave={e => e.currentTarget.style.boxShadow = "0 2px 12px rgba(44,62,58,0.06)"}
+            >
               <div style={{ marginBottom: 12 }}>{card.icon}</div>
               <h3 style={{ fontSize: 15, fontWeight: 700, color: colors.text, marginBottom: 8 }}>{card.title}</h3>
               <p style={{ fontSize: 13, color: colors.textMed, lineHeight: 1.6, margin: 0 }}>{card.desc}</p>
