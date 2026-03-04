@@ -28,10 +28,10 @@ export default function HomePage({ navigate }) {
           style={{
             background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 28,
             boxShadow: "0 2px 12px rgba(44,62,58,0.06)", marginBottom: 16, cursor: "pointer",
-            transition: "box-shadow 0.15s",
+            transition: "box-shadow 0.2s, transform 0.2s",
           }}
-          onMouseEnter={e => e.currentTarget.style.boxShadow = "0 4px 20px rgba(91,138,114,0.15)"}
-          onMouseLeave={e => e.currentTarget.style.boxShadow = "0 2px 12px rgba(44,62,58,0.06)"}
+          onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 8px 30px rgba(91,138,114,0.25)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+          onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 12px rgba(44,62,58,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}
         >
           <div style={{ marginBottom: 12 }}>{features[0].icon}</div>
           <h3 style={{ fontSize: 17, fontWeight: 700, color: colors.text, marginBottom: 8 }}>{features[0].title}</h3>
@@ -44,10 +44,10 @@ export default function HomePage({ navigate }) {
               onClick={() => navigate(card.page)}
               style={{
                 background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 24,
-                boxShadow: "0 2px 12px rgba(44,62,58,0.06)", cursor: "pointer", transition: "box-shadow 0.15s",
+                boxShadow: "0 2px 12px rgba(44,62,58,0.06)", cursor: "pointer", transition: "box-shadow 0.2s, transform 0.2s",
               }}
-              onMouseEnter={e => e.currentTarget.style.boxShadow = "0 4px 20px rgba(91,138,114,0.15)"}
-              onMouseLeave={e => e.currentTarget.style.boxShadow = "0 2px 12px rgba(44,62,58,0.06)"}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 8px 30px rgba(91,138,114,0.25)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 12px rgba(44,62,58,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}
             >
               <div style={{ marginBottom: 12 }}>{card.icon}</div>
               <h3 style={{ fontSize: 15, fontWeight: 700, color: colors.text, marginBottom: 8 }}>{card.title}</h3>
