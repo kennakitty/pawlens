@@ -1,5 +1,5 @@
 import { Router } from "express";
-import db from "../db.js";
+import db, { parseProduct } from "../db.js";
 
 const router = Router();
 
@@ -21,6 +21,18 @@ router.get("/:id", (req, res) => {
   const row = db.prepare("SELECT * FROM ingredients WHERE id = ?").get(req.params.id);
   if (!row) return res.status(404).json({ error: "Ingredient not found" });
   res.json(row);
+});
+
+// GET /api/ingredients/:id/products — find products containing this ingredient
+router.get("/:id/products", (req, res) => {
+  const ingredient = db.prepare("SELECT * FROM ingredients WHERE id = ?").get(req.params.id);
+  if (!ingredient) return res.status(404).json({ error: "Ingredient not found" });
+
+  // Search fullIngredients text for the ingredient name (case-insensitive via LIKE)
+  const rows = db.prepare(
+    "SELECT id, name, brand, imageUrl, transparencyScore FROM products WHERE fullIngredients LIKE ? ORDER BY brand, name"
+  ).all(`%${ingredient.name}%`);
+  res.json(rows);
 });
 
 // POST /api/ingredients (admin)
