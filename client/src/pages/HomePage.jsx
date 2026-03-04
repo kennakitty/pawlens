@@ -21,17 +21,35 @@ export default function HomePage({ navigate }) {
         I built PawLens after discovering I'd been making the wrong food choices for my cats — fooled by fancy packaging and misleading labels. You deserve honest answers about what you're feeding your pet. Think of this as a chat with a friend who happens to know their stuff.
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, textAlign: "left", marginBottom: 48 }}>
-        {features.map((card, i) => (
-          <div key={i} style={{
-            background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 24,
-            boxShadow: "0 2px 12px rgba(44,62,58,0.06)"
-          }}>
-            <div style={{ marginBottom: 12 }}>{card.icon}</div>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: colors.text, marginBottom: 8 }}>{card.title}</h3>
-            <p style={{ fontSize: 13, color: colors.textMed, lineHeight: 1.6, margin: 0 }}>{card.desc}</p>
-          </div>
-        ))}
+      <div style={{ textAlign: "left", marginBottom: 48 }}>
+        {/* Hero card — Tell Us About Your Cat */}
+        <div
+          onClick={() => navigate("recommend")}
+          style={{
+            background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 28,
+            boxShadow: "0 2px 12px rgba(44,62,58,0.06)", marginBottom: 16, cursor: "pointer",
+            transition: "box-shadow 0.15s",
+          }}
+          onMouseEnter={e => e.currentTarget.style.boxShadow = "0 4px 20px rgba(91,138,114,0.15)"}
+          onMouseLeave={e => e.currentTarget.style.boxShadow = "0 2px 12px rgba(44,62,58,0.06)"}
+        >
+          <div style={{ marginBottom: 12 }}>{features[0].icon}</div>
+          <h3 style={{ fontSize: 17, fontWeight: 700, color: colors.text, marginBottom: 8 }}>{features[0].title}</h3>
+          <p style={{ fontSize: 14, color: colors.textMed, lineHeight: 1.6, margin: 0 }}>{features[0].desc}</p>
+        </div>
+        {/* Supporting cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+          {features.slice(1).map((card, i) => (
+            <div key={i} style={{
+              background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 24,
+              boxShadow: "0 2px 12px rgba(44,62,58,0.06)"
+            }}>
+              <div style={{ marginBottom: 12 }}>{card.icon}</div>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: colors.text, marginBottom: 8 }}>{card.title}</h3>
+              <p style={{ fontSize: 13, color: colors.textMed, lineHeight: 1.6, margin: 0 }}>{card.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <button onClick={() => navigate("recommend")} style={{

@@ -11,7 +11,7 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
   const [filterFoodType, setFilterFoodType] = useState("All");
   const [filterHealth, setFilterHealth] = useState("All");
   const [filterBreed, setFilterBreed] = useState("All");
-  const [filterSort, setFilterSort] = useState("name");
+  const [filterSort, setFilterSort] = useState("score-high");
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
