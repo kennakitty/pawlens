@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import colors from "../colors.js";
-import { AlertTriangle, Eye, ShieldAlert, Tags, FlaskConical, Scale } from "lucide-react";
+import { AlertTriangle, Eye, ShieldAlert, Tags, FlaskConical, Scale, ChevronDown } from "lucide-react";
 
 function SeverityBadge({ severity }) {
   const config = {
@@ -10,9 +10,48 @@ function SeverityBadge({ severity }) {
   };
   const c = config[severity] || config.medium;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 12, background: c.bg, color: c.color, fontSize: 12, fontWeight: 600 }}>
-      <AlertTriangle size={12} /> {c.label}
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 10, background: c.bg, color: c.color, fontSize: 11, fontWeight: 600 }}>
+      <AlertTriangle size={10} /> {c.label}
     </span>
+  );
+}
+
+function FlagCard({ flag }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div
+      onClick={() => setOpen(!open)}
+      style={{
+        background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 12,
+        padding: open ? "12px 16px 16px" : "12px 16px",
+        boxShadow: "0 1px 6px rgba(44,62,58,0.04)", cursor: "pointer",
+        transition: "box-shadow 0.15s",
+      }}
+      onMouseEnter={e => e.currentTarget.style.boxShadow = "0 2px 10px rgba(44,62,58,0.1)"}
+      onMouseLeave={e => e.currentTarget.style.boxShadow = "0 1px 6px rgba(44,62,58,0.04)"}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+          <AlertTriangle size={14} color={colors.poor} style={{ flexShrink: 0 }} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{flag.title}</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: 8 }}>
+          <SeverityBadge severity={flag.severity} />
+          <ChevronDown size={14} color={colors.textLight} style={{ transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0)" }} />
+        </div>
+      </div>
+      {open && (
+        <div style={{ marginTop: 12 }}>
+          <p style={{ fontSize: 13, color: colors.textMed, lineHeight: 1.6, margin: "0 0 10px" }}>{flag.description}</p>
+          <div style={{ padding: 10, background: colors.primaryLight, borderRadius: 8, display: "flex", alignItems: "flex-start", gap: 6 }}>
+            <Eye size={13} color={colors.primary} style={{ marginTop: 2, flexShrink: 0 }} />
+            <p style={{ fontSize: 12, color: colors.primary, margin: 0, lineHeight: 1.5 }}>
+              <strong>What to look for:</strong> {flag.whatToLookFor}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -31,10 +70,10 @@ const CATEGORY_DESCRIPTIONS = {
 };
 
 const CATEGORY_ICONS = {
-  "Label Tricks": <Tags size={18} />,
-  "Ingredient Deception": <ShieldAlert size={18} />,
-  "Hidden Health Concerns": <FlaskConical size={18} />,
-  "Misleading Standards": <Scale size={18} />,
+  "Label Tricks": <Tags size={16} />,
+  "Ingredient Deception": <ShieldAlert size={16} />,
+  "Hidden Health Concerns": <FlaskConical size={16} />,
+  "Misleading Standards": <Scale size={16} />,
 };
 
 export default function RedFlagsPage() {
@@ -72,12 +111,12 @@ export default function RedFlagsPage() {
   });
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 20px" }}>
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 20px" }}>
       <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 28, fontWeight: 700, color: colors.primary, marginBottom: 8 }}>
         Red Flags & Label Tricks
       </h2>
       <p style={{ color: colors.textMed, fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
-        The tactics pet food companies use to make their products look better than they are. Learn to spot these so you can make informed choices.
+        The tactics pet food companies use to make their products look better than they are. Click any flag to learn more.
       </p>
       <input
         type="text" placeholder="Search red flags..."
@@ -90,36 +129,22 @@ export default function RedFlagsPage() {
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: 60, color: colors.textMed }}>No red flags match your search.</div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
           {sortedCategories.map(cat => (
             <div key={cat}>
-              <div style={{ marginBottom: 12 }}>
-                <h3 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 18, fontWeight: 700, color: colors.text, margin: "0 0 4px", display: "flex", alignItems: "center", gap: 8 }}>
-                  {CATEGORY_ICONS[cat] || <AlertTriangle size={18} />} {cat}
+              <div style={{ marginBottom: 10 }}>
+                <h3 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 16, fontWeight: 700, color: colors.text, margin: "0 0 2px", display: "flex", alignItems: "center", gap: 6 }}>
+                  {CATEGORY_ICONS[cat] || <AlertTriangle size={16} />} {cat}
                 </h3>
                 {CATEGORY_DESCRIPTIONS[cat] && (
-                  <p style={{ fontSize: 13, color: colors.textLight, margin: 0, lineHeight: 1.5 }}>
+                  <p style={{ fontSize: 12, color: colors.textLight, margin: 0, lineHeight: 1.4 }}>
                     {CATEGORY_DESCRIPTIONS[cat]}
                   </p>
                 )}
               </div>
-              <div style={{ display: "grid", gap: 16 }}>
+              <div style={{ display: "grid", gap: 8 }}>
                 {grouped[cat].map((flag) => (
-                  <div key={flag.id} style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 12px rgba(44,62,58,0.06)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                      <h3 style={{ fontSize: 17, fontWeight: 700, color: colors.text, margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
-                        <AlertTriangle size={18} color={colors.poor} /> {flag.title}
-                      </h3>
-                      <SeverityBadge severity={flag.severity} />
-                    </div>
-                    <p style={{ fontSize: 14, color: colors.textMed, lineHeight: 1.7, marginBottom: 16 }}>{flag.description}</p>
-                    <div style={{ padding: 14, background: colors.primaryLight, borderRadius: 10, display: "flex", alignItems: "flex-start", gap: 8 }}>
-                      <Eye size={16} color={colors.primary} style={{ marginTop: 2, flexShrink: 0 }} />
-                      <p style={{ fontSize: 13, color: colors.primary, margin: 0, lineHeight: 1.6 }}>
-                        <strong>What to look for:</strong> {flag.whatToLookFor}
-                      </p>
-                    </div>
-                  </div>
+                  <FlagCard key={flag.id} flag={flag} />
                 ))}
               </div>
             </div>
