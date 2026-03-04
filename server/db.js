@@ -73,6 +73,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     severity TEXT,
+    category TEXT,
     description TEXT,
     whatToLookFor TEXT
   );
