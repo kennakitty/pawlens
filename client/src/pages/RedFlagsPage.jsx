@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import colors from "../colors.js";
-import { AlertTriangle, Eye, ShieldAlert, Tags, FlaskConical, Scale, ChevronDown } from "lucide-react";
+import { AlertTriangle, Eye, ShieldAlert, Tags, FlaskConical, Scale } from "lucide-react";
 
 function SeverityBadge({ severity }) {
   const config = {
@@ -10,48 +10,9 @@ function SeverityBadge({ severity }) {
   };
   const c = config[severity] || config.medium;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 10, background: c.bg, color: c.color, fontSize: 11, fontWeight: 600 }}>
-      <AlertTriangle size={10} /> {c.label}
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 7px", borderRadius: 8, background: c.bg, color: c.color, fontSize: 10, fontWeight: 600 }}>
+      <AlertTriangle size={9} /> {c.label}
     </span>
-  );
-}
-
-function FlagCard({ flag }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div
-      onClick={() => setOpen(!open)}
-      style={{
-        background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 12,
-        padding: open ? "12px 16px 16px" : "12px 16px",
-        boxShadow: "0 1px 6px rgba(44,62,58,0.04)", cursor: "pointer",
-        transition: "box-shadow 0.15s",
-      }}
-      onMouseEnter={e => e.currentTarget.style.boxShadow = "0 2px 10px rgba(44,62,58,0.1)"}
-      onMouseLeave={e => e.currentTarget.style.boxShadow = "0 1px 6px rgba(44,62,58,0.04)"}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-          <AlertTriangle size={14} color={colors.poor} style={{ flexShrink: 0 }} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{flag.title}</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: 8 }}>
-          <SeverityBadge severity={flag.severity} />
-          <ChevronDown size={14} color={colors.textLight} style={{ transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0)" }} />
-        </div>
-      </div>
-      {open && (
-        <div style={{ marginTop: 12 }}>
-          <p style={{ fontSize: 13, color: colors.textMed, lineHeight: 1.6, margin: "0 0 10px" }}>{flag.description}</p>
-          <div style={{ padding: 10, background: colors.primaryLight, borderRadius: 8, display: "flex", alignItems: "flex-start", gap: 6 }}>
-            <Eye size={13} color={colors.primary} style={{ marginTop: 2, flexShrink: 0 }} />
-            <p style={{ fontSize: 12, color: colors.primary, margin: 0, lineHeight: 1.5 }}>
-              <strong>What to look for:</strong> {flag.whatToLookFor}
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -92,7 +53,6 @@ export default function RedFlagsPage() {
     !searchTerm || f.title.toLowerCase().includes(searchTerm.toLowerCase()) || f.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Group by category
   const grouped = {};
   for (const flag of filtered) {
     const cat = flag.category || "Other";
@@ -100,7 +60,6 @@ export default function RedFlagsPage() {
     grouped[cat].push(flag);
   }
 
-  // Sort categories by defined order
   const sortedCategories = Object.keys(grouped).sort((a, b) => {
     const ai = CATEGORY_ORDER.indexOf(a);
     const bi = CATEGORY_ORDER.indexOf(b);
@@ -111,12 +70,12 @@ export default function RedFlagsPage() {
   });
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 20px" }}>
+    <div style={{ maxWidth: 960, margin: "0 auto", padding: "40px 20px" }}>
       <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 28, fontWeight: 700, color: colors.primary, marginBottom: 8 }}>
         Red Flags & Label Tricks
       </h2>
       <p style={{ color: colors.textMed, fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
-        The tactics pet food companies use to make their products look better than they are. Click any flag to learn more.
+        The tactics pet food companies use to make their products look better than they are.
       </p>
       <input
         type="text" placeholder="Search red flags..."
@@ -142,9 +101,27 @@ export default function RedFlagsPage() {
                   </p>
                 )}
               </div>
-              <div style={{ display: "grid", gap: 8 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
                 {grouped[cat].map((flag) => (
-                  <FlagCard key={flag.id} flag={flag} />
+                  <div key={flag.id} style={{
+                    background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 12,
+                    padding: 16, boxShadow: "0 1px 6px rgba(44,62,58,0.04)",
+                    display: "flex", flexDirection: "column", gap: 8,
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                      <h4 style={{ fontSize: 13, fontWeight: 700, color: colors.text, margin: 0, display: "flex", alignItems: "center", gap: 5, lineHeight: 1.3 }}>
+                        <AlertTriangle size={13} color={colors.poor} style={{ flexShrink: 0 }} /> {flag.title}
+                      </h4>
+                      <SeverityBadge severity={flag.severity} />
+                    </div>
+                    <p style={{ fontSize: 12, color: colors.textMed, lineHeight: 1.5, margin: 0 }}>{flag.description}</p>
+                    <div style={{ padding: "8px 10px", background: colors.primaryLight, borderRadius: 8, display: "flex", alignItems: "flex-start", gap: 5, marginTop: "auto" }}>
+                      <Eye size={11} color={colors.primary} style={{ marginTop: 2, flexShrink: 0 }} />
+                      <p style={{ fontSize: 11, color: colors.primary, margin: 0, lineHeight: 1.4 }}>
+                        <strong>Look for:</strong> {flag.whatToLookFor}
+                      </p>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
