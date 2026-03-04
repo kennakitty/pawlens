@@ -38,5 +38,11 @@ Thumbs.db
 *.swp
 *.swo
 
+# Temp/debug files
+*.err
+*.bak
+*.backup.json
+check-*.mjs
+
 # Replit (replit.nix excluded but .replit config kept in repo)
 replit.nix
