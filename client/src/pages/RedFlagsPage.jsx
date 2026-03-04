@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
 import colors from "../colors.js";
-import { AlertTriangle, Eye, ShieldAlert, Tags, FlaskConical, Scale } from "lucide-react";
+import { AlertTriangle, Eye, ShieldAlert, Tags, FlaskConical, Scale, Info } from "lucide-react";
 
 function SeverityBadge({ severity }) {
   const config = {
-    high: { bg: colors.poorBg, color: colors.poor, label: "High Risk" },
-    medium: { bg: colors.cautionBg, color: colors.caution, label: "Watch For" },
-    low: { bg: colors.neutralBg, color: colors.neutral, label: "Good to Know" }
+    high: { bg: colors.poorBg, color: colors.poor, label: "High Risk", icon: <AlertTriangle size={9} /> },
+    medium: { bg: colors.cautionBg, color: colors.caution, label: "Watch For", icon: <Eye size={9} /> },
+    low: { bg: colors.neutralBg, color: colors.neutral, label: "Good to Know", icon: <Info size={9} /> }
   };
   const c = config[severity] || config.medium;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 7px", borderRadius: 8, background: c.bg, color: c.color, fontSize: 10, fontWeight: 600 }}>
-      <AlertTriangle size={9} /> {c.label}
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 7px", borderRadius: 8, background: c.bg, color: c.color, fontSize: 10, fontWeight: 600, whiteSpace: "nowrap" }}>
+      {c.icon} {c.label}
     </span>
   );
 }
