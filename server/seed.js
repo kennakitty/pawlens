@@ -227,4 +227,19 @@ if (unscoredCount > 0) {
   console.log("Transparency scores already calculated. Skipping.");
 }
 
+// ─── FIX SENIOR LIFE STAGES ──────────────────────────────────────────────────
+// Products with 11+ or 12+ in their name should be Senior (11+), not Senior (7+)
+const seniorFixes = [
+  { lifeStage: "Senior (11+)", match: "%Senior 11+%" },
+  { lifeStage: "Senior (11+)", match: "%Adults 11+%" },
+  { lifeStage: "Senior (11+)", match: "%Mature 12+%" },
+];
+for (const fix of seniorFixes) {
+  db.prepare("UPDATE products SET lifeStage = ? WHERE name LIKE ? AND lifeStage != ?")
+    .run(fix.lifeStage, fix.match, fix.lifeStage);
+}
+// Senior products incorrectly tagged as Adult
+db.prepare("UPDATE products SET lifeStage = 'Senior (7+)' WHERE lifeStage = 'Adult' AND name LIKE '%Senior%' AND name NOT LIKE '%11+%'").run();
+db.prepare("UPDATE products SET lifeStage = 'Senior (11+)' WHERE lifeStage = 'Adult' AND name LIKE '%Senior%' AND name LIKE '%11+%'").run();
+
 console.log("Database ready!");
