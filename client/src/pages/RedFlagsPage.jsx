@@ -109,8 +109,8 @@ export default function RedFlagsPage() {
                     display: "flex", flexDirection: "column", gap: 8,
                   }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                      <h4 style={{ fontSize: 13, fontWeight: 700, color: colors.text, margin: 0, display: "flex", alignItems: "center", gap: 5, lineHeight: 1.3 }}>
-                        <AlertTriangle size={13} color={colors.poor} style={{ flexShrink: 0 }} /> {flag.title}
+                      <h4 style={{ fontSize: 13, fontWeight: 700, color: colors.text, margin: 0, lineHeight: 1.3 }}>
+                        {flag.title}
                       </h4>
                       <SeverityBadge severity={flag.severity} />
                     </div>
