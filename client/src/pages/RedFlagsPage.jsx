@@ -60,6 +60,12 @@ export default function RedFlagsPage() {
     grouped[cat].push(flag);
   }
 
+  // Sort flags within each category by severity: high → medium → low
+  const severityOrder = { high: 0, medium: 1, low: 2 };
+  for (const cat in grouped) {
+    grouped[cat].sort((a, b) => (severityOrder[a.severity] ?? 9) - (severityOrder[b.severity] ?? 9));
+  }
+
   const sortedCategories = Object.keys(grouped).sort((a, b) => {
     const ai = CATEGORY_ORDER.indexOf(a);
     const bi = CATEGORY_ORDER.indexOf(b);
