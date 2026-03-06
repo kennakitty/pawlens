@@ -30,7 +30,7 @@ router.get("/:id/products", (req, res) => {
 
   // Search fullIngredients text for the ingredient name (case-insensitive via LIKE)
   const rows = db.prepare(
-    "SELECT id, name, brand, imageUrl, transparencyScore FROM products WHERE fullIngredients LIKE ? ORDER BY brand, name"
+    "SELECT id, name, brand, imageUrl, transparencyScore, lifeStage FROM products WHERE fullIngredients LIKE ? ORDER BY brand, name"
   ).all(`%${ingredient.name}%`);
   res.json(rows);
 });

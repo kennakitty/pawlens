@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import colors from "../colors.js";
+import LifeStageBadge from "../LifeStageBadge.jsx";
 import ProductDetail from "./ProductDetail.jsx";
 
 export default function BrowsePage({ selectedProduct, setSelectedProduct, setPage, setSelectedIngredient }) {
@@ -181,7 +182,7 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                   <span style={{ fontSize: 11, fontWeight: 600, color: colors.accent, textTransform: "uppercase", letterSpacing: 0.5 }}>{p.brand}</span>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    {p.lifeStage && <span style={{ fontSize: 11, color: colors.textMed }}>{p.lifeStage}</span>}
+                    {p.lifeStage && <LifeStageBadge lifeStage={p.lifeStage} />}
                     {p.transparencyScore != null && (() => {
                       const s = p.transparencyScore;
                       const scoreColor = s >= 75 ? colors.good : s >= 50 ? colors.caution : colors.poor;

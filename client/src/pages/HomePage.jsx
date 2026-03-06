@@ -6,7 +6,7 @@ export default function HomePage({ navigate }) {
     { icon: <Search size={24} color={colors.primary} />, title: "Tell Us About Your Cat", desc: "Describe your cat's breed, age, health needs, and preferences. Our AI thinks outside the box to find creative solutions.", page: "recommend" },
     { icon: <FlaskConical size={24} color={colors.primary} />, title: "Decode Any Ingredient", desc: "Plain-language explanations of what's actually in cat food and what the labels don't tell you.", page: "ingredients" },
     { icon: <BarChart3 size={24} color={colors.primary} />, title: "Real Nutritional Data", desc: "Every product backed by actual guaranteed analysis numbers — not marketing claims or pretty packaging.", page: "browse" },
-    { icon: <AlertTriangle size={24} color={colors.primary} />, title: "Red Flag Alerts", desc: "Recalls, misleading claims, and ingredients to watch — the stuff brands hope you won't notice.", page: "redflags" }
+    { icon: <AlertTriangle size={24} color={colors.primary} />, title: "What Labels Hide", desc: "The tricks brands use to make their food look better than it is — and how to spot them.", page: "redflags" }
   ];
 
   return (

@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import colors from "../colors.js";
-import { Check, Minus, AlertTriangle, X, Tag, Heart, ChevronRight, Package } from "lucide-react";
+import { Check, Star, Minus, AlertTriangle, X, Tag, Heart, ChevronRight, Package } from "lucide-react";
+import LifeStageBadge from "../LifeStageBadge.jsx";
 
 function RatingBadge({ rating }) {
   const config = {
+    great: { bg: colors.greatBg, color: colors.great, label: "Great", icon: <Star size={12} /> },
     good: { bg: colors.goodBg, color: colors.good, label: "Good", icon: <Check size={12} /> },
     neutral: { bg: colors.neutralBg, color: colors.neutral, label: "Neutral", icon: <Minus size={12} /> },
     caution: { bg: colors.cautionBg, color: colors.caution, label: "Caution", icon: <AlertTriangle size={12} /> },
@@ -135,30 +137,58 @@ export default function IngredientsPage({ selectedIngredient, setSelectedIngredi
                 <p style={{ fontSize: 12, color: colors.textLight, margin: "0 0 12px" }}>
                   {relatedProducts.length} product{relatedProducts.length !== 1 ? "s" : ""} contain {ing.name}
                 </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 300, overflowY: "auto" }}>
-                  {relatedProducts.map(p => (
-                    <div key={p.id}
-                      onClick={() => { setSelectedProduct(p); setPage("browse"); }}
-                      style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        padding: "10px 14px", background: colors.bg, borderRadius: 10,
-                        cursor: "pointer", transition: "background 0.15s",
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = colors.primaryLight}
-                      onMouseLeave={e => e.currentTarget.style.background = colors.bg}
-                    >
-                      <div style={{ minWidth: 0 }}>
-                        <span style={{ fontSize: 11, color: colors.textLight, fontWeight: 600 }}>{p.brand}</span>
-                        <div style={{ fontSize: 13, color: colors.text, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {Object.entries(
+                    relatedProducts.reduce((acc, p) => {
+                      const brand = p.brand || "Other";
+                      if (!acc[brand]) acc[brand] = [];
+                      acc[brand].push(p);
+                      return acc;
+                    }, {})
+                  )
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([brand, products]) => (
+                      <div key={brand} style={{
+                        background: colors.card, border: `1px solid ${colors.border}`,
+                        borderRadius: 12,
+                      }}>
+                        <div style={{
+                          padding: "10px 14px", background: colors.primaryLight,
+                          borderBottom: `1px solid ${colors.border}`,
+                          borderRadius: "12px 12px 0 0",
+                        }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: colors.primary }}>{brand}</span>
+                          <span style={{ fontSize: 11, color: colors.textLight, marginLeft: 8 }}>
+                            ({products.length})
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          {products.map((p, i) => (
+                            <div key={p.id}
+                              onClick={() => { setSelectedProduct(p); setPage("browse"); }}
+                              style={{
+                                display: "flex", alignItems: "center", justifyContent: "space-between",
+                                padding: "8px 14px", cursor: "pointer", transition: "background 0.15s",
+                                borderTop: i > 0 ? `1px solid ${colors.border}` : "none",
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.background = colors.primaryLight}
+                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                            >
+                              <div style={{ fontSize: 13, color: colors.text, fontWeight: 500, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                {p.name}
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: 12 }}>
+                                <LifeStageBadge lifeStage={p.lifeStage} />
+                                {p.transparencyScore != null && (
+                                  <span style={{ fontSize: 11, fontWeight: 600, color: colors.primary }}>{p.transparencyScore}/100</span>
+                                )}
+                                <ChevronRight size={14} color={colors.textLight} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: 12 }}>
-                        {p.transparencyScore != null && (
-                          <span style={{ fontSize: 11, fontWeight: 600, color: colors.primary }}>{p.transparencyScore}/100</span>
-                        )}
-                        <ChevronRight size={14} color={colors.textLight} />
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </>
             ) : (
@@ -199,7 +229,7 @@ export default function IngredientsPage({ selectedIngredient, setSelectedIngredi
         Ingredient Decoder
       </h2>
       <p style={{ color: colors.textMed, fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
-        Plain-language explanations of common cat food ingredients. Learn what's really in the bag and what the labels don't want you to know.
+        What's actually in your cat's food — explained in plain language, rated by how good it really is.
       </p>
       <input
         type="text" placeholder="Search ingredients..."

@@ -9,14 +9,16 @@ const colors = {
   textMed: "#4A5E54",
   textLight: "#7A8E84",
   border: "#C8D4CA",
-  good: "#2D7A4F",
-  goodBg: "#E8F5ED",
+  great: "#7C3AED",
+  greatBg: "#E8D5F5",
+  good: "#22A34E",
+  goodBg: "#BBF7D0",
   caution: "#C49520",
   cautionBg: "#FFF6DC",
   poor: "#C0392B",
   poorBg: "#FDE8E5",
-  neutral: "#5B7B9A",
-  neutralBg: "#EDF2F7",
+  neutral: "#2563EB",
+  neutralBg: "#BFDBFE",
 };
 
 export default colors;

@@ -40,7 +40,7 @@ export default function App() {
     { id: "recommend", label: "Get Recommendations", icon: <Search size={15} /> },
     { id: "browse", label: "Browse Foods", icon: <LayoutGrid size={15} /> },
     { id: "ingredients", label: "Ingredient Decoder", icon: <FlaskConical size={15} /> },
-    { id: "redflags", label: "Red Flags", icon: <AlertTriangle size={15} /> },
+    { id: "redflags", label: "What Labels Hide", icon: <AlertTriangle size={15} /> },
   ];
 
   return (

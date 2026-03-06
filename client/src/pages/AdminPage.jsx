@@ -354,7 +354,7 @@ export default function AdminPage() {
           <Field name="Ingredient Name *"><input value={f.name} onChange={e => set("name", e.target.value)} style={inputStyle()} /></Field>
           <Field name="Rating">
             <select value={f.rating} onChange={e => set("rating", e.target.value)} style={inputStyle()}>
-              {["good", "neutral", "caution", "poor"].map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
+              {["great", "good", "neutral", "caution", "poor"].map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
             </select>
           </Field>
           <Field name="Category" note="e.g. Protein, Carbohydrate, Supplement"><input value={f.category} onChange={e => set("category", e.target.value)} style={inputStyle()} /></Field>

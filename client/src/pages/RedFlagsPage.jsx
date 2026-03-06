@@ -4,9 +4,9 @@ import { AlertTriangle, Eye, ShieldAlert, Tags, FlaskConical, Scale, Info } from
 
 function SeverityBadge({ severity }) {
   const config = {
-    high: { bg: colors.poorBg, color: colors.poor, label: "High Risk", icon: <AlertTriangle size={9} /> },
+    high: { bg: colors.poorBg, color: colors.poor, label: "Don't Fall For This", icon: <AlertTriangle size={9} /> },
     medium: { bg: colors.cautionBg, color: colors.caution, label: "Watch For", icon: <Eye size={9} /> },
-    low: { bg: colors.neutralBg, color: colors.neutral, label: "Good to Know", icon: <Info size={9} /> }
+    low: { bg: colors.neutralBg, color: colors.neutral, label: "Worth Knowing", icon: <Info size={9} /> }
   };
   const c = config[severity] || config.medium;
   return (
@@ -78,13 +78,13 @@ export default function RedFlagsPage() {
   return (
     <div style={{ maxWidth: 960, margin: "0 auto", padding: "40px 20px" }}>
       <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 28, fontWeight: 700, color: colors.primary, marginBottom: 8 }}>
-        Red Flags & Label Tricks
+        What Labels Hide
       </h2>
       <p style={{ color: colors.textMed, fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
         The tactics pet food companies use to make their products look better than they are.
       </p>
       <input
-        type="text" placeholder="Search red flags..."
+        type="text" placeholder="Search labeling tricks..."
         value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
         style={{ width: "100%", padding: "10px 14px", border: `1px solid ${colors.border}`, borderRadius: 10, fontSize: 14, fontFamily: "'Nunito', sans-serif", marginBottom: 28, boxSizing: "border-box" }}
       />
@@ -92,7 +92,7 @@ export default function RedFlagsPage() {
       {loading ? (
         <div style={{ textAlign: "center", padding: 60, color: colors.textMed }}>Loading...</div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: 60, color: colors.textMed }}>No red flags match your search.</div>
+        <div style={{ textAlign: "center", padding: 60, color: colors.textMed }}>No label tricks match your search.</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
           {sortedCategories.map(cat => (
@@ -121,10 +121,9 @@ export default function RedFlagsPage() {
                       <SeverityBadge severity={flag.severity} />
                     </div>
                     <p style={{ fontSize: 12, color: colors.textMed, lineHeight: 1.5, margin: 0 }}>{flag.description}</p>
-                    <div style={{ padding: "8px 10px", background: colors.primaryLight, borderRadius: 8, display: "flex", alignItems: "flex-start", gap: 5, marginTop: "auto" }}>
-                      <Eye size={11} color={colors.primary} style={{ marginTop: 2, flexShrink: 0 }} />
+                    <div style={{ padding: "8px 10px", background: colors.primaryLight, borderRadius: 8, marginTop: "auto" }}>
                       <p style={{ fontSize: 11, color: colors.primary, margin: 0, lineHeight: 1.4 }}>
-                        <strong>Look for:</strong> {flag.whatToLookFor}
+                        {flag.whatToLookFor}
                       </p>
                     </div>
                   </div>
