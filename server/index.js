@@ -4,6 +4,14 @@ import cors from "cors";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
+// Run seed/fixups on startup (imports wet products if missing, applies corrections)
+import { execSync } from "child_process";
+try {
+  execSync("node server/seed.js", { cwd: join(__dirname, ".."), stdio: "inherit" });
+} catch (e) {
+  console.error("Seed error (non-fatal):", e.message);
+}
+
 import productsRouter from "./routes/products.js";
 import ingredientsRouter from "./routes/ingredients.js";
 import redflagsRouter from "./routes/redflags.js";
