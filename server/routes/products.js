@@ -17,11 +17,15 @@ const PRODUCT_COLUMNS = [
 
 // GET /api/products — list all products with optional filters
 router.get("/", (req, res) => {
-  const { brand, lifeStage, foodType, breed, sort = "name", search } = req.query;
+  const { brand, lifeStage, foodType, breed, type, sort = "name", search } = req.query;
 
   let query = "SELECT * FROM products WHERE 1=1";
   const params = [];
 
+  if (type && type !== "All") {
+    query += " AND type = ?";
+    params.push(type);
+  }
   if (brand && brand !== "All") {
     query += " AND brand = ?";
     params.push(brand);
@@ -53,11 +57,16 @@ router.get("/", (req, res) => {
 
 // GET /api/products/filters — get available filter values
 router.get("/filters", (req, res) => {
-  const brands = db.prepare("SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL ORDER BY brand").all().map(r => r.brand);
-  const lifeStages = db.prepare("SELECT DISTINCT lifeStage FROM products WHERE lifeStage IS NOT NULL ORDER BY lifeStage").all().map(r => r.lifeStage);
-  const foodTypes = db.prepare("SELECT DISTINCT foodType FROM products WHERE foodType IS NOT NULL ORDER BY foodType").all().map(r => r.foodType);
-  const breeds = db.prepare("SELECT DISTINCT breed FROM products WHERE breed IS NOT NULL ORDER BY breed").all().map(r => r.breed);
-  res.json({ brands, lifeStages, foodTypes, breeds });
+  const { type } = req.query;
+  const typeFilter = (type && type !== "All") ? " AND type = ?" : "";
+  const typeParams = typeFilter ? [type] : [];
+
+  const brands = db.prepare(`SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL${typeFilter} ORDER BY brand`).all(...typeParams).map(r => r.brand);
+  const lifeStages = db.prepare(`SELECT DISTINCT lifeStage FROM products WHERE lifeStage IS NOT NULL${typeFilter} ORDER BY lifeStage`).all(...typeParams).map(r => r.lifeStage);
+  const foodTypes = db.prepare(`SELECT DISTINCT foodType FROM products WHERE foodType IS NOT NULL${typeFilter} ORDER BY foodType`).all(...typeParams).map(r => r.foodType);
+  const breeds = db.prepare(`SELECT DISTINCT breed FROM products WHERE breed IS NOT NULL${typeFilter} ORDER BY breed`).all(...typeParams).map(r => r.breed);
+  const types = db.prepare("SELECT DISTINCT type FROM products WHERE type IS NOT NULL ORDER BY type").all().map(r => r.type);
+  res.json({ brands, lifeStages, foodTypes, breeds, types });
 });
 
 // GET /api/products/:id — single product

@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import colors from "../colors.js";
 import LifeStageBadge from "../LifeStageBadge.jsx";
+import FoodCategoryToggle from "../FoodCategoryToggle.jsx";
 import ProductDetail from "./ProductDetail.jsx";
 
-export default function BrowsePage({ selectedProduct, setSelectedProduct, setPage, setSelectedIngredient }) {
+export default function BrowsePage({ selectedProduct, setSelectedProduct, setPage, setSelectedIngredient, foodCategory, setFoodCategory }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -11,16 +12,16 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
   const [filterLifeStage, setFilterLifeStage] = useState("All");
   const [filterFoodType, setFilterFoodType] = useState("All");
   const [filterHealth, setFilterHealth] = useState("All");
-  const [filterBreed, setFilterBreed] = useState("All");
   const [filterSort, setFilterSort] = useState("score-high");
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    fetch("/api/products")
+    setLoading(true);
+    fetch(`/api/products?type=${foodCategory}`)
       .then(r => r.json())
       .then(data => { setProducts(data); setLoading(false); })
       .catch(() => { setError("Failed to load products."); setLoading(false); });
-  }, []);
+  }, [foodCategory]);
 
   // Build filter options dynamically from actual data
   // All hooks must be called before any conditional return (Rules of Hooks)
@@ -30,16 +31,15 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
     const available = new Set(products.map(p => p.lifeStage).filter(Boolean));
     return ["All", ...lifeStageOrder.filter(s => available.has(s))];
   }, [products]);
-  const foodTypes = useMemo(() => ["All", ...Array.from(new Set(products.map(p => p.foodType).filter(Boolean))).sort()], [products]);
+  const foodTypes = useMemo(() => {
+    const all = new Set();
+    products.forEach(p => { if (p.foodType) p.foodType.split(", ").forEach(ft => all.add(ft)); });
+    return ["All", ...[...all].sort()];
+  }, [products]);
   const healthOptions = useMemo(() => {
     const all = new Set();
     products.forEach(p => (Array.isArray(p.healthConsiderations) ? p.healthConsiderations : []).forEach(h => all.add(h)));
     return ["All", ...[...all].sort()];
-  }, [products]);
-  const breedOptions = useMemo(() => {
-    const all = new Set();
-    products.forEach(p => { if (p.breed) all.add(p.breed); });
-    return all.size > 0 ? ["All", ...[...all].sort()] : [];
   }, [products]);
 
   if (selectedProduct) {
@@ -66,9 +66,8 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
     .filter(p => {
       if (filterBrand !== "All" && p.brand !== filterBrand) return false;
       if (filterLifeStage !== "All" && p.lifeStage !== filterLifeStage) return false;
-      if (filterFoodType !== "All" && p.foodType !== filterFoodType) return false;
+      if (filterFoodType !== "All" && !(p.foodType || "").split(", ").includes(filterFoodType)) return false;
       if (filterHealth !== "All" && !(Array.isArray(p.healthConsiderations) ? p.healthConsiderations : []).includes(filterHealth)) return false;
-      if (filterBreed !== "All" && p.breed !== filterBreed) return false;
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         if (!p.name?.toLowerCase().includes(term) && !p.brand?.toLowerCase().includes(term) && !p.flavor?.toLowerCase().includes(term)) return false;
@@ -98,7 +97,7 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
     });
 
   // Count active filters
-  const activeFilterCount = [filterBrand, filterLifeStage, filterFoodType, filterHealth, filterBreed]
+  const activeFilterCount = [filterBrand, filterLifeStage, filterFoodType, filterHealth]
     .filter(f => f !== "All").length + (searchTerm ? 1 : 0);
 
   const selectStyle = { padding: "8px 12px", border: `1px solid ${colors.border}`, borderRadius: 8, fontSize: 13, fontFamily: "'Nunito', sans-serif", background: "#fff" };
@@ -108,18 +107,25 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
     setFilterLifeStage("All");
     setFilterFoodType("All");
     setFilterHealth("All");
-    setFilterBreed("All");
     setSearchTerm("");
-    setFilterSort("name");
+    setFilterSort("score-high");
   }
 
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 20px" }}>
-      <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 28, fontWeight: 700, color: colors.primary, marginBottom: 8 }}>
-        Browse All Cat Foods
-      </h2>
+      <div style={{ position: "sticky", top: 0, zIndex: 10, background: colors.bg, paddingTop: 8, paddingBottom: 8, marginLeft: -20, marginRight: -20, paddingLeft: 20, paddingRight: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 28, fontWeight: 700, color: colors.primary, margin: 0 }}>
+            Browse All Cat Foods
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: colors.textLight, textTransform: "uppercase", letterSpacing: 1 }}>Cat</span>
+            <FoodCategoryToggle value={foodCategory} onChange={(v) => { setFoodCategory(v); clearFilters(); }} />
+          </div>
+        </div>
+      </div>
       <p style={{ color: colors.textMed, fontSize: 14, marginBottom: 24 }}>
-        {loading ? "Loading..." : `${filtered.length} of ${products.length} dry cat food products from PetSmart. Click any product for full details.`}
+        {loading ? "Loading..." : `${filtered.length} of ${products.length} ${foodCategory.toLowerCase()} cat food products from PetSmart. Click any product for full details.`}
       </p>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 24, padding: 16, background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 14, boxShadow: "0 2px 12px rgba(44,62,58,0.06)" }}>
@@ -140,11 +146,6 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
         <select value={filterHealth} onChange={e => setFilterHealth(e.target.value)} style={selectStyle}>
           {healthOptions.map(h => <option key={h} value={h}>{h === "All" ? "All Health Focus" : h}</option>)}
         </select>
-        {breedOptions.length > 0 && (
-          <select value={filterBreed} onChange={e => setFilterBreed(e.target.value)} style={selectStyle}>
-            {breedOptions.map(b => <option key={b} value={b}>{b === "All" ? "All Breeds" : b}</option>)}
-          </select>
-        )}
         <select value={filterSort} onChange={e => setFilterSort(e.target.value)} style={selectStyle}>
           <option value="name">Sort: Name A-Z</option>
           <option value="brand">Sort: Brand A-Z</option>
@@ -194,15 +195,16 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
                   </div>
                 </div>
                 <h3 style={{ fontSize: 15, fontWeight: 600, color: colors.text, margin: "0 0 8px", lineHeight: 1.3 }}>{p.name}</h3>
-                {p.flavor && <p style={{ fontSize: 12, color: colors.textMed, margin: "0 0 8px" }}>Flavor: {p.flavor}</p>}
+                {p.flavor && <p style={{ fontSize: 12, color: colors.textMed, margin: "0 0 8px" }}>{p.flavor}</p>}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8 }}>
-                  {p.foodType && <span style={{ padding: "2px 8px", background: colors.bg, borderRadius: 6, fontSize: 11, color: colors.textMed }}>{p.foodType}</span>}
-                  {p.breed && <span style={{ padding: "2px 8px", background: colors.neutralBg, borderRadius: 6, fontSize: 11, color: colors.neutral }}>{p.breed}</span>}
+                  {p.foodType && p.foodType.split(", ").map((ft, j) => (
+                    <span key={j} style={{ padding: "2px 8px", background: colors.bg, borderRadius: 6, fontSize: 11, color: colors.textMed }}>{ft}</span>
+                  ))}
                   {(Array.isArray(p.healthConsiderations) ? p.healthConsiderations : []).slice(0, 2).map((hc, i) => (
                     <span key={i} style={{ padding: "2px 8px", background: colors.primaryLight, borderRadius: 6, fontSize: 11, color: colors.primary }}>{hc}</span>
                   ))}
                 </div>
-                {p.calorieContent && <p style={{ fontSize: 11, color: colors.textMed, marginTop: 8 }}>{p.calorieContent}</p>}
+
               </div>
             ))}
           </div>

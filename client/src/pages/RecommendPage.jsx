@@ -1,8 +1,8 @@
 import { useState } from "react";
 import colors from "../colors.js";
 import { Search, Lightbulb, Stethoscope } from "lucide-react";
-
-export default function RecommendPage() {
+export default function RecommendPage({ foodCategory, setFoodCategory }) {
+  const [petType, setPetType] = useState("Cat");
   const [catInput, setCatInput] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -18,7 +18,7 @@ export default function RecommendPage() {
       const res = await fetch("/api/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ catInput })
+        body: JSON.stringify({ catInput, foodCategory })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -49,9 +49,39 @@ export default function RecommendPage() {
 
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 20px" }}>
-      <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 28, fontWeight: 700, color: colors.primary, marginBottom: 8 }}>
-        Tell me about your cat
-      </h2>
+      <div style={{ position: "sticky", top: 0, zIndex: 10, background: colors.bg, paddingTop: 8, paddingBottom: 8, marginLeft: -20, marginRight: -20, paddingLeft: 20, paddingRight: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 28, fontWeight: 700, color: colors.primary, margin: 0 }}>
+            Tell me about your {petType === "Cat" ? "🐱" : "🐶"}
+          </h2>
+          <div style={{
+            display: "inline-flex",
+            borderRadius: 10,
+            overflow: "hidden",
+            border: `2px solid ${colors.primary}`,
+            fontFamily: "'Nunito', sans-serif",
+          }}>
+            {[{ key: "Cat", emoji: "🐱" }, { key: "Dog", emoji: "🐶" }].map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => setPetType(opt.key)}
+                style={{
+                  padding: "8px 20px",
+                  fontSize: 18,
+                  fontFamily: "'Nunito', sans-serif",
+                  border: "none",
+                  cursor: opt.key === "Dog" ? "default" : "pointer",
+                  background: petType === opt.key ? colors.primary : "#fff",
+                  opacity: opt.key === "Dog" ? 0.4 : 1,
+                  transition: "all 0.2s ease",
+                }}
+              >
+                {opt.emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
       <p style={{ color: colors.textMed, fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
         Share anything that might help — breed, age, weight, health conditions, current food, feeding setup, behavior quirks, what your vet has said. The more detail, the better I can help. I'll think creatively and give you multiple options.
       </p>

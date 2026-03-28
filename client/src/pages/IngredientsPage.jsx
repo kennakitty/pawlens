@@ -3,6 +3,21 @@ import colors from "../colors.js";
 import { Check, Star, Minus, AlertTriangle, X, Tag, Heart, ChevronRight, Package } from "lucide-react";
 import LifeStageBadge from "../LifeStageBadge.jsx";
 
+
+function AppliesToBadge({ appliesTo }) {
+  const config = {
+    dry: { label: "Dry Food", bg: colors.cautionBg, color: colors.caution },
+    wet: { label: "Wet Food", bg: "#D4F1F9", color: "#1A7A8A" },
+    both: { label: "Dry & Wet Food", bg: colors.primaryLight, color: colors.primary },
+  };
+  const c = config[appliesTo] || config.both;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 8px", borderRadius: 12, background: c.bg, color: c.color, fontSize: 11, fontWeight: 600, whiteSpace: "nowrap" }}>
+      {c.label}
+    </span>
+  );
+}
+
 function RatingBadge({ rating }) {
   const config = {
     great: { bg: colors.greatBg, color: colors.great, label: "Great", icon: <Star size={12} /> },
@@ -13,7 +28,7 @@ function RatingBadge({ rating }) {
   };
   const c = config[rating] || config.neutral;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 12, background: c.bg, color: c.color, fontSize: 12, fontWeight: 600 }}>
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4, width: 82, padding: "3px 0", borderRadius: 12, background: c.bg, color: c.color, fontSize: 12, fontWeight: 600, flexShrink: 0 }}>
       {c.icon} {c.label}
     </span>
   );
@@ -53,7 +68,7 @@ const CATEGORY_DESCRIPTIONS = {
   "Additive": "Flavors, thickeners, and other extras",
 };
 
-export default function IngredientsPage({ selectedIngredient, setSelectedIngredient, setSelectedProduct, setPage }) {
+export default function IngredientsPage({ selectedIngredient, setSelectedIngredient, setSelectedProduct, setPage, foodCategory, setFoodCategory }) {
   const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,6 +76,7 @@ export default function IngredientsPage({ selectedIngredient, setSelectedIngredi
   const [loadingProducts, setLoadingProducts] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
     fetch("/api/ingredients")
       .then(r => r.json())
       .then(data => { setIngredients(data); setLoading(false); })
@@ -71,11 +87,11 @@ export default function IngredientsPage({ selectedIngredient, setSelectedIngredi
   useEffect(() => {
     if (!selectedIngredient?.id) { setRelatedProducts([]); return; }
     setLoadingProducts(true);
-    fetch(`/api/ingredients/${selectedIngredient.id}/products`)
+    fetch(`/api/ingredients/${selectedIngredient.id}/products?type=${foodCategory}`)
       .then(r => r.json())
       .then(products => { setRelatedProducts(products); setLoadingProducts(false); })
       .catch(() => setLoadingProducts(false));
-  }, [selectedIngredient]);
+  }, [selectedIngredient, foodCategory]);
 
   // If an ingredient was selected by name (from product detail), find its full record
   useEffect(() => {
@@ -267,10 +283,11 @@ export default function IngredientsPage({ selectedIngredient, setSelectedIngredi
                     onMouseEnter={e => e.currentTarget.style.boxShadow = "0 4px 16px rgba(44,62,58,0.1)"}
                     onMouseLeave={e => e.currentTarget.style.boxShadow = "0 2px 12px rgba(44,62,58,0.06)"}
                   >
-                    <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <RatingBadge rating={ing.rating} />
                       <h3 style={{ fontSize: 15, fontWeight: 600, color: colors.text, margin: 0 }}>{ing.name}</h3>
                     </div>
-                    <RatingBadge rating={ing.rating} />
+                    <AppliesToBadge appliesTo={ing.appliesTo} />
                   </div>
                 ))}
               </div>

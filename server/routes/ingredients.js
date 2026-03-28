@@ -5,11 +5,15 @@ const router = Router();
 
 // GET /api/ingredients — list all, optional search
 router.get("/", (req, res) => {
-  const { search } = req.query;
-  let query = "SELECT * FROM ingredients";
+  const { search, appliesTo } = req.query;
+  let query = "SELECT * FROM ingredients WHERE 1=1";
   const params = [];
+  if (appliesTo && appliesTo !== "all") {
+    query += " AND (appliesTo = ? OR appliesTo = 'both')";
+    params.push(appliesTo);
+  }
   if (search) {
-    query += " WHERE name LIKE ? OR category LIKE ?";
+    query += " AND (name LIKE ? OR category LIKE ?)";
     params.push(`%${search}%`, `%${search}%`);
   }
   query += " ORDER BY name ASC";
@@ -29,9 +33,15 @@ router.get("/:id/products", (req, res) => {
   if (!ingredient) return res.status(404).json({ error: "Ingredient not found" });
 
   // Search fullIngredients text for the ingredient name (case-insensitive via LIKE)
-  const rows = db.prepare(
-    "SELECT id, name, brand, imageUrl, transparencyScore, lifeStage FROM products WHERE fullIngredients LIKE ? ORDER BY brand, name"
-  ).all(`%${ingredient.name}%`);
+  const { type } = req.query;
+  let query = "SELECT id, name, brand, imageUrl, transparencyScore, lifeStage, type FROM products WHERE fullIngredients LIKE ?";
+  const params = [`%${ingredient.name}%`];
+  if (type && type !== "All") {
+    query += " AND type = ?";
+    params.push(type);
+  }
+  query += " ORDER BY brand, name";
+  const rows = db.prepare(query).all(...params);
   res.json(rows);
 });
 

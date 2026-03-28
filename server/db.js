@@ -66,7 +66,8 @@ db.exec(`
     category TEXT,
     explanation TEXT,
     misleading TEXT,
-    healthNotes TEXT
+    healthNotes TEXT,
+    appliesTo TEXT DEFAULT 'both'
   );
 
   CREATE TABLE IF NOT EXISTS red_flags (
@@ -75,9 +76,14 @@ db.exec(`
     severity TEXT,
     category TEXT,
     description TEXT,
-    whatToLookFor TEXT
+    whatToLookFor TEXT,
+    appliesTo TEXT DEFAULT 'both'
   );
 `);
+
+// Migration: add appliesTo columns to existing databases that don't have them
+try { db.exec("ALTER TABLE ingredients ADD COLUMN appliesTo TEXT DEFAULT 'both'"); } catch {}
+try { db.exec("ALTER TABLE red_flags ADD COLUMN appliesTo TEXT DEFAULT 'both'"); } catch {}
 
 // JSON array fields that get parsed when reading from DB
 const JSON_ARRAY_FIELDS = [

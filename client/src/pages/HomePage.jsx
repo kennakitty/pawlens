@@ -22,20 +22,34 @@ export default function HomePage({ navigate }) {
       </p>
 
       <div style={{ textAlign: "left", marginBottom: 48 }}>
-        {/* Hero card — Tell Us About Your Cat */}
-        <div
-          onClick={() => navigate("recommend")}
-          style={{
-            background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 28,
-            boxShadow: "0 2px 12px rgba(44,62,58,0.06)", marginBottom: 16, cursor: "pointer",
-            transition: "box-shadow 0.2s, transform 0.2s",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 8px 30px rgba(91,138,114,0.25)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-          onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 12px rgba(44,62,58,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}
-        >
-          <div style={{ marginBottom: 12 }}>{features[0].icon}</div>
-          <h3 style={{ fontSize: 17, fontWeight: 700, color: colors.text, marginBottom: 8 }}>{features[0].title}</h3>
-          <p style={{ fontSize: 14, color: colors.textMed, lineHeight: 1.6, margin: 0 }}>{features[0].desc}</p>
+        {/* Hero cards — Cat & Dog */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+          <div
+            onClick={() => navigate("recommend")}
+            style={{
+              background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 28,
+              boxShadow: "0 2px 12px rgba(44,62,58,0.06)", cursor: "pointer",
+              transition: "box-shadow 0.2s, transform 0.2s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 8px 30px rgba(91,138,114,0.25)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 12px rgba(44,62,58,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}
+          >
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🐱</div>
+            <h3 style={{ fontSize: 17, fontWeight: 700, color: colors.text, marginBottom: 8 }}>Tell Us About Your Cat</h3>
+            <p style={{ fontSize: 14, color: colors.textMed, lineHeight: 1.6, margin: 0 }}>Describe your cat's breed, age, health needs, and preferences. Our AI thinks outside the box to find creative solutions.</p>
+          </div>
+          <div
+            style={{
+              background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 28,
+              boxShadow: "0 2px 12px rgba(44,62,58,0.06)", opacity: 0.5,
+              transition: "box-shadow 0.2s, transform 0.2s", position: "relative",
+            }}
+          >
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🐶</div>
+            <h3 style={{ fontSize: 17, fontWeight: 700, color: colors.text, marginBottom: 8 }}>Tell Us About Your Dog</h3>
+            <p style={{ fontSize: 14, color: colors.textMed, lineHeight: 1.6, margin: 0 }}>Personalized dog food recommendations based on breed, size, age, and health needs. Coming soon!</p>
+            <span style={{ position: "absolute", top: 12, right: 12, padding: "3px 10px", borderRadius: 8, background: colors.accentLight, color: colors.accent, fontSize: 11, fontWeight: 700 }}>Coming Soon</span>
+          </div>
         </div>
         {/* Supporting cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
@@ -65,7 +79,7 @@ export default function HomePage({ navigate }) {
         Get Personalized Recommendations
       </button>
       <p style={{ fontSize: 12, color: colors.textLight, marginTop: 32 }}>
-        Currently covering PetSmart dry cat food. Wet food, Petco, and Chewy coming soon.
+        Currently covering 332 dry + 891 wet cat food products from PetSmart. Petco and Chewy coming soon.
       </p>
     </div>
   );

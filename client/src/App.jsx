@@ -28,6 +28,7 @@ export default function App() {
   const [page, setPage] = useState("home");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedIngredient, setSelectedIngredient] = useState(null);
+  const [foodCategory, setFoodCategory] = useState("Dry");
 
   function navigate(newPage) {
     setPage(newPage);
@@ -61,8 +62,8 @@ export default function App() {
               <button key={item.id} onClick={() => navigate(item.id)}
                 style={{
                   padding: "10px 14px", border: "none", cursor: "pointer", borderRadius: 10, fontSize: 13, fontWeight: 500,
-                  background: page === item.id ? colors.primaryLight : "transparent",
-                  color: page === item.id ? colors.primary : colors.textMed,
+                  background: page === item.id ? colors.primary : "transparent",
+                  color: page === item.id ? "#fff" : colors.textMed,
                   transition: "all 0.2s", whiteSpace: "nowrap", fontFamily: "'Nunito', sans-serif",
                   display: "flex", alignItems: "center", gap: 5
                 }}>
@@ -75,13 +76,15 @@ export default function App() {
 
       {/* ── Pages ── */}
       {page === "home" && <HomePage navigate={navigate} />}
-      {page === "recommend" && <RecommendPage />}
+      {page === "recommend" && <RecommendPage foodCategory={foodCategory} setFoodCategory={setFoodCategory} />}
       {page === "browse" && (
         <BrowsePage
           selectedProduct={selectedProduct}
           setSelectedProduct={setSelectedProduct}
           setPage={setPage}
           setSelectedIngredient={setSelectedIngredient}
+          foodCategory={foodCategory}
+          setFoodCategory={setFoodCategory}
         />
       )}
       {page === "ingredients" && (
@@ -90,9 +93,11 @@ export default function App() {
           setSelectedIngredient={setSelectedIngredient}
           setSelectedProduct={setSelectedProduct}
           setPage={setPage}
+          foodCategory={foodCategory}
+          setFoodCategory={setFoodCategory}
         />
       )}
-      {page === "redflags" && <RedFlagsPage />}
+      {page === "redflags" && <RedFlagsPage foodCategory={foodCategory} setFoodCategory={setFoodCategory} />}
       {page === "admin" && <AdminPage />}
 
       {/* ── Footer ── */}

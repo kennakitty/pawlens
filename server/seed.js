@@ -8,6 +8,56 @@ import db, { serializeProduct } from "./db.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// ─── SCORING FUNCTION (declared early so fixups can use it) ──────────────────
+const GOOD_FIRST = ["chicken","turkey","salmon","tuna","duck","lamb","venison","rabbit","trout","whitefish","herring","pollock","deboned","fish","beef","pork"];
+const SCORE_RED_FLAGS = ["by-product","by product","corn gluten meal","soybean meal","animal fat","meat and bone meal","animal digest","artificial","bha","bht","ethoxyquin","propylene glycol","food coloring","red 40","yellow 5","yellow 6","blue 2","caramel color","menadione","sodium bisulfite"];
+const FILLERS = ["ground yellow corn","corn","wheat","soy flour","brewers rice","wheat flour","corn starch","tapioca starch","powdered cellulose"];
+const WET_FILLERS = ["water sufficient for processing","modified corn starch","modified tapioca starch"];
+const PREMIUM = ["deboned","fresh","raw","freeze-dried","whole","organic","wild-caught","free-range","cage-free","probiotics","prebiotics","l-carnitine","glucosamine","chondroitin","taurine","omega"];
+
+function scoreProduct(p) {
+  let s = 50;
+  const ing = (p.fullIngredients || "").toLowerCase();
+  const ga = (p.guaranteedAnalysis || "").toLowerCase();
+  const aafco = (p.aafco || "").toLowerCase();
+  const nutrOpts = JSON.parse(p.nutritionalOptions || "[]");
+  const isWet = (p.type || "").toLowerCase() === "wet";
+  const fillers = isWet ? [...FILLERS, ...WET_FILLERS] : FILLERS;
+
+  const first = ing.split(",")[0] || "";
+  if (GOOD_FIRST.some(g => first.includes(g))) s += 15;
+  else if (fillers.some(f => first.includes(f))) s -= 10;
+  let rf = 0; for (const f of SCORE_RED_FLAGS) { if (ing.includes(f)) rf++; } s -= Math.min(rf * 5, 20);
+  let fc = 0; for (const f of fillers) { if (ing.includes(f)) fc++; } s -= Math.min(fc * 3, 10);
+  let pc = 0; for (const sig of PREMIUM) { if (ing.includes(sig)) pc++; } s += Math.min(pc * 3, 15);
+  if (ing.length > 50) s += 2; if (ga.length > 30) s += 2; if (aafco.length > 10) s += 2;
+  if (p.calorieContent) s += 2; if (p.description) s += 2;
+  const noFiller = ["No Corn","No Wheat","No Soy","Grain Free","Gluten Free"];
+  let nc = 0; for (const c of noFiller) { if (nutrOpts.includes(c)) nc++; } s += Math.min(nc * 2, 10);
+
+  // Protein thresholds differ for wet vs dry
+  const pm = ga.match(/protein.*?(\d+\.?\d*)%/);
+  if (pm) {
+    const pv = parseFloat(pm[1]);
+    if (isWet) {
+      if (pv >= 12) s += 5; else if (pv >= 10) s += 3; else if (pv >= 8) s += 1;
+    } else {
+      if (pv >= 40) s += 5; else if (pv >= 35) s += 3; else if (pv >= 30) s += 1;
+    }
+  }
+  return Math.max(0, Math.min(100, Math.round(s)));
+}
+
+function scoreUnscoredProducts() {
+  const allProducts = db.prepare("SELECT * FROM products WHERE transparencyScore IS NULL").all();
+  if (allProducts.length === 0) return;
+  const updateScore = db.prepare("UPDATE products SET transparencyScore = ? WHERE id = ?");
+  db.exec("BEGIN");
+  for (const p of allProducts) updateScore.run(scoreProduct(p), p.id);
+  db.exec("COMMIT");
+  console.log(`Scored ${allProducts.length} products`);
+}
+
 console.log("Checking database...");
 
 // ─── CHECK IF TABLES ALREADY HAVE DATA ──────────────────────────────────────
@@ -40,6 +90,103 @@ if (productCount > 0 && ingredientCount > 0 && redFlagCount > 0) {
   for (const name of goodIngredients) {
     db.prepare("UPDATE ingredients SET rating = 'good' WHERE name = ? AND rating = 'great'").run(name);
   }
+
+  // ─── Wet product seeding (check separately from dry) ─────────────────────
+  const wetCount = db.prepare("SELECT COUNT(*) as count FROM products WHERE type = 'Wet'").get().count;
+  if (wetCount === 0) {
+    const wetPath = join(__dirname, "data/petsmart-wet-products.json");
+    try {
+      const wetProducts = JSON.parse(readFileSync(wetPath, "utf-8"));
+      const insertProduct = db.prepare(`
+        INSERT INTO products (
+          name, brand, sku, petsmartUrl, imageUrl, gtin13,
+          type, retailer, lifeStage, foodType, breed, flavor,
+          fullIngredients, guaranteedAnalysis, calorieContent, aafco,
+          nutritionalOptions, healthConsiderations,
+          benefits, description, directions,
+          extraAttributes, lastUpdated
+        ) VALUES (
+          @name, @brand, @sku, @petsmartUrl, @imageUrl, @gtin13,
+          @type, @retailer, @lifeStage, @foodType, @breed, @flavor,
+          @fullIngredients, @guaranteedAnalysis, @calorieContent, @aafco,
+          @nutritionalOptions, @healthConsiderations,
+          @benefits, @description, @directions,
+          @extraAttributes, @lastUpdated
+        )
+      `);
+      db.exec("BEGIN");
+      for (const p of wetProducts) {
+        insertProduct.run(serializeProduct({
+          name: p.name || "Unknown",
+          brand: p.brand || null,
+          sku: p.sku || null,
+          petsmartUrl: p.productURL || null,
+          imageUrl: p.imageUrl || null,
+          gtin13: p.gtin13 || null,
+          type: "Wet",
+          retailer: "PetSmart",
+          lifeStage: p.lifeStage || null,
+          foodType: p.foodType || null,
+          breed: p.breed || null,
+          flavor: p.flavor || null,
+          fullIngredients: p.fullIngredients || null,
+          guaranteedAnalysis: p.guaranteedAnalysis || null,
+          calorieContent: p.calorieContent || null,
+          aafco: p.aafco || null,
+          nutritionalOptions: p.nutritionalOptions || [],
+          healthConsiderations: p.healthConsiderations || [],
+          benefits: p.benefits || [],
+          description: p.description || null,
+          directions: p.directions || null,
+          extraAttributes: p.extraAttributes || {},
+          lastUpdated: p.lastUpdated || new Date().toISOString(),
+        }));
+      }
+      db.exec("COMMIT");
+      console.log(`Seeded ${wetProducts.length} wet food products`);
+
+      // Score wet products
+      scoreUnscoredProducts();
+    } catch (e) {
+      if (e.code === "ENOENT") {
+        console.log("No wet food data file found (petsmart-wet-products.json). Skipping wet products.");
+      } else throw e;
+    }
+  }
+
+  // ─── Wet-specific ingredients (add if missing) ──────────────────────────────
+  const wetIngredients = [
+    { name: "Chicken Broth", rating: "good", category: "Additive", explanation: "Liquid made by simmering chicken. Adds moisture and flavor to wet food. A quality moisture source.", misleading: "Sounds wholesome, but can be used to dilute meat content. Check that actual meat is still listed first.", healthNotes: "Good hydration source. Provides some protein and minerals. Better than plain water as a moisture source in wet food.", appliesTo: "wet" },
+    { name: "Meat Broth", rating: "neutral", category: "Additive", explanation: "Generic broth from unspecified meat sources. Adds moisture and flavor.", misleading: "The lack of specificity is the issue — 'meat broth' doesn't tell you what animal it came from.", healthNotes: "Safe but vague. Named broths (chicken broth, beef broth) are preferable for transparency.", appliesTo: "wet" },
+    { name: "Fish Broth", rating: "good", category: "Additive", explanation: "Broth made from fish. Provides moisture, omega-3 fatty acids, and flavor cats love.", misleading: "Like 'fish meal,' the species is unspecified. Named fish broths are better.", healthNotes: "Good source of hydration and flavor. May provide some omega-3 benefits. Cats generally love fish-flavored moisture.", appliesTo: "wet" },
+    { name: "Xanthan Gum", rating: "neutral", category: "Additive", explanation: "A polysaccharide used as a thickener and stabilizer. Produced by bacterial fermentation.", misleading: "Sounds chemical but it's a common food additive used in human food too. Helps maintain texture in wet food.", healthNotes: "Generally safe in small amounts. Provides no nutritional value. Used purely for texture.", appliesTo: "wet" },
+    { name: "Cassia Gum", rating: "neutral", category: "Additive", explanation: "A thickener derived from cassia plant seeds. Used to create gel-like texture in wet food.", misleading: "Less common than guar gum but serves the same purpose. Not harmful in typical amounts.", healthNotes: "Safe food additive. No significant nutritional value. Purely functional for texture.", appliesTo: "wet" },
+    { name: "Agar-Agar", rating: "neutral", category: "Additive", explanation: "A gelatin substitute derived from seaweed. Used as a gelling agent in wet cat food.", misleading: "Natural seaweed product, generally considered safe. Better alternative to carrageenan.", healthNotes: "Safe and well-tolerated. Unlike carrageenan (also from seaweed), agar-agar has no inflammation concerns.", appliesTo: "wet" },
+    { name: "Modified Corn Starch", rating: "caution", category: "Carbohydrate", explanation: "Chemically or physically altered corn starch used as a thickener in wet food.", misleading: "The 'modified' part sounds scary but it just means the starch structure was changed for better thickening. Still unnecessary carbs for cats.", healthNotes: "Adds carbohydrate load without nutritional benefit. Used to create gravy texture cheaply.", appliesTo: "wet" },
+    { name: "Sodium Tripolyphosphate", rating: "neutral", category: "Additive", explanation: "A phosphate compound used as an emulsifier and to help retain moisture in wet food.", misleading: "Sounds like an industrial chemical, but it's commonly used in food processing. Small amounts are not harmful.", healthNotes: "Generally safe at typical levels. High phosphorus content may be a concern for cats with kidney issues.", appliesTo: "wet" },
+    { name: "Titanium Dioxide", rating: "poor", category: "Additive", explanation: "A white pigment used solely for color. Makes wet food appear whiter or more uniform in appearance.", misleading: "Has zero nutritional value — purely cosmetic. Your cat doesn't care what color their food is.", healthNotes: "Banned as a food additive in the EU since 2022 due to potential genotoxicity concerns. Still allowed in US pet food. Avoid if possible.", appliesTo: "wet" },
+  ];
+  const insertWetIng = db.prepare(`
+    INSERT OR IGNORE INTO ingredients (name, rating, category, explanation, misleading, healthNotes, appliesTo)
+    VALUES (@name, @rating, @category, @explanation, @misleading, @healthNotes, @appliesTo)
+  `);
+  for (const i of wetIngredients) insertWetIng.run(i);
+
+  // Update carrageenan to wet-specific
+  db.prepare("UPDATE ingredients SET appliesTo = 'wet' WHERE name = 'Carrageenan' AND appliesTo = 'both'").run();
+
+  // ─── Wet-specific red flags (add if missing) ────────────────────────────────
+  const wetRedFlags = [
+    { title: "BPA / Epoxy Can Linings", severity: "medium", category: "Hidden Health Concerns", description: "Many canned cat foods use BPA-based epoxy linings inside the can. BPA is an endocrine disruptor linked to health issues in humans and animals.", whatToLookFor: "Look for brands that specifically state 'BPA-free cans' or 'BPA-NI (non-intent)' linings. Most manufacturers don't disclose this — you may need to contact them directly.", appliesTo: "wet" },
+    { title: "Gravy Masking Low Meat Content", severity: "high", category: "Ingredient Deception", description: "Heavy gravy, broth, or sauce can dilute the actual meat content significantly. A food that looks meaty may be mostly water and thickeners with a small amount of protein.", whatToLookFor: "Check if water or broth is the first ingredient — that means the food is mostly liquid. Look for foods where a named meat is #1. Compare protein percentages on a dry-matter basis.", appliesTo: "wet" },
+    { title: "Misleading Protein % Due to Moisture", severity: "medium", category: "Hidden Health Concerns", description: "Wet food typically shows 8-12% protein on the label because it's 75-82% water. This makes it impossible to compare directly with dry food (which shows 30-40% protein). You need to calculate dry-matter basis.", whatToLookFor: "To compare: divide protein% by (100 - moisture%). Example: 10% protein with 78% moisture = 10/(100-78) = 45% protein on dry-matter basis. Many wet foods are actually higher protein than dry when compared fairly.", appliesTo: "wet" },
+    { title: "Thickener-Heavy Formulas", severity: "medium", category: "Hidden Health Concerns", description: "Some wet foods rely heavily on gums, starches, and thickeners (carrageenan, xanthan gum, guar gum, modified starch) to create appealing texture while using less actual meat.", whatToLookFor: "Count the number of thickeners in the ingredient list. One is normal. Three or more thickeners suggest the manufacturer is compensating for low meat content with texture engineering.", appliesTo: "wet" },
+  ];
+  const insertWetRF = db.prepare(`
+    INSERT OR IGNORE INTO red_flags (title, severity, category, description, whatToLookFor, appliesTo)
+    VALUES (@title, @severity, @category, @description, @whatToLookFor, @appliesTo)
+  `);
+  for (const f of wetRedFlags) insertWetRF.run(f);
 
   console.log("Fixups applied. Database ready!");
   process.exit(0);
@@ -213,44 +360,7 @@ if (redFlagCount === 0) {
 }
 
 // ─── TRANSPARENCY SCORES ─────────────────────────────────────────────────────
-// Calculate scores for any products that don't have one yet
-const unscoredCount = db.prepare("SELECT COUNT(*) as count FROM products WHERE transparencyScore IS NULL").get().count;
-if (unscoredCount > 0) {
-  const GOOD_FIRST = ["chicken","turkey","salmon","tuna","duck","lamb","venison","rabbit","trout","whitefish","herring","pollock","deboned","fish","beef","pork"];
-  const RED_FLAGS = ["by-product","by product","corn gluten meal","soybean meal","animal fat","meat and bone meal","animal digest","artificial","bha","bht","ethoxyquin","propylene glycol","food coloring","red 40","yellow 5","yellow 6","blue 2","caramel color","menadione","sodium bisulfite"];
-  const FILLERS = ["ground yellow corn","corn","wheat","soy flour","brewers rice","wheat flour","corn starch","tapioca starch","powdered cellulose"];
-  const PREMIUM = ["deboned","fresh","raw","freeze-dried","whole","organic","wild-caught","free-range","cage-free","probiotics","prebiotics","l-carnitine","glucosamine","chondroitin","taurine","omega"];
-
-  function scoreProduct(p) {
-    let s = 50;
-    const ing = (p.fullIngredients || "").toLowerCase();
-    const ga = (p.guaranteedAnalysis || "").toLowerCase();
-    const aafco = (p.aafco || "").toLowerCase();
-    const nutrOpts = JSON.parse(p.nutritionalOptions || "[]");
-    const first = ing.split(",")[0] || "";
-    if (GOOD_FIRST.some(g => first.includes(g))) s += 15;
-    else if (FILLERS.some(f => first.includes(f))) s -= 10;
-    let rf = 0; for (const f of RED_FLAGS) { if (ing.includes(f)) rf++; } s -= Math.min(rf * 5, 20);
-    let fc = 0; for (const f of FILLERS) { if (ing.includes(f)) fc++; } s -= Math.min(fc * 3, 10);
-    let pc = 0; for (const sig of PREMIUM) { if (ing.includes(sig)) pc++; } s += Math.min(pc * 3, 15);
-    if (ing.length > 50) s += 2; if (ga.length > 30) s += 2; if (aafco.length > 10) s += 2;
-    if (p.calorieContent) s += 2; if (p.description) s += 2;
-    const noFiller = ["No Corn","No Wheat","No Soy","Grain Free","Gluten Free"];
-    let nc = 0; for (const c of noFiller) { if (nutrOpts.includes(c)) nc++; } s += Math.min(nc * 2, 10);
-    const pm = ga.match(/protein.*?(\d+\.?\d*)%/);
-    if (pm) { const pv = parseFloat(pm[1]); if (pv >= 40) s += 5; else if (pv >= 35) s += 3; else if (pv >= 30) s += 1; }
-    return Math.max(0, Math.min(100, Math.round(s)));
-  }
-
-  const allProducts = db.prepare("SELECT * FROM products WHERE transparencyScore IS NULL").all();
-  const updateScore = db.prepare("UPDATE products SET transparencyScore = ? WHERE id = ?");
-  db.exec("BEGIN");
-  for (const p of allProducts) updateScore.run(scoreProduct(p), p.id);
-  db.exec("COMMIT");
-  console.log(`Scored ${allProducts.length} products`);
-} else {
-  console.log("Transparency scores already calculated. Skipping.");
-}
+scoreUnscoredProducts();
 
 // ─── FIX SENIOR LIFE STAGES ──────────────────────────────────────────────────
 // Products with 11+ or 12+ in their name should be Senior (11+), not Senior (7+)

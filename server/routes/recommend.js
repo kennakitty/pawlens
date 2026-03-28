@@ -5,7 +5,7 @@ const router = Router();
 
 // POST /api/recommend — send cat description to OpenRouter AI
 router.post("/", async (req, res) => {
-  const { catInput } = req.body;
+  const { catInput, foodCategory = "Dry" } = req.body;
   if (!catInput?.trim()) {
     return res.status(400).json({ error: "Please describe your cat(s)." });
   }
@@ -17,8 +17,8 @@ router.post("/", async (req, res) => {
     });
   }
 
-  // Fetch all products — compact summary for initial selection
-  const products = db.prepare("SELECT * FROM products ORDER BY brand, name").all().map(parseProduct);
+  // Fetch products of the selected food category
+  const products = db.prepare("SELECT * FROM products WHERE type = ? ORDER BY brand, name").all(foodCategory).map(parseProduct);
 
   // Build compact product catalog (name, brand, key stats only — no full ingredients)
   const productCatalog = products
@@ -38,7 +38,7 @@ router.post("/", async (req, res) => {
 
 USER: ${catInput}
 
-CATALOG (${products.length} PetSmart dry cat foods):
+CATALOG (${products.length} PetSmart ${foodCategory.toLowerCase()} cat foods):
 ${productCatalog}`;
 
   try {
@@ -98,7 +98,7 @@ ${productCatalog}`;
 
     const systemPrompt = `You are PawLens, a warm, knowledgeable cat nutrition advisor who cuts through misleading pet food marketing to give honest, personalized advice. You are not generic — every response feels written for THIS specific person's cat(s).
 
-SELECTED PRODUCTS (pre-filtered for this cat from ${products.length} total PetSmart dry cat foods):
+SELECTED PRODUCTS (pre-filtered for this cat from ${products.length} total PetSmart ${foodCategory.toLowerCase()} cat foods):
 ${detailedList}
 
 YOUR GUIDELINES:

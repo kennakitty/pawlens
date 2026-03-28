@@ -2,6 +2,21 @@ import { useState, useEffect } from "react";
 import colors from "../colors.js";
 import { AlertTriangle, Eye, ShieldAlert, Tags, FlaskConical, Scale, Info } from "lucide-react";
 
+
+function AppliesToBadge({ appliesTo }) {
+  const config = {
+    dry: { label: "Dry Food", bg: colors.cautionBg, color: colors.caution },
+    wet: { label: "Wet Food", bg: "#D4F1F9", color: "#1A7A8A" },
+    both: { label: "Dry & Wet Food", bg: colors.primaryLight, color: colors.primary },
+  };
+  const c = config[appliesTo] || config.both;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 7px", borderRadius: 8, background: c.bg, color: c.color, fontSize: 10, fontWeight: 600, whiteSpace: "nowrap" }}>
+      {c.label}
+    </span>
+  );
+}
+
 function SeverityBadge({ severity }) {
   const config = {
     high: { bg: colors.poorBg, color: colors.poor, label: "Don't Fall For This", icon: <AlertTriangle size={9} /> },
@@ -37,12 +52,13 @@ const CATEGORY_ICONS = {
   "Misleading Standards": <Scale size={16} />,
 };
 
-export default function RedFlagsPage() {
+export default function RedFlagsPage({ foodCategory, setFoodCategory }) {
   const [flags, setFlags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
+    setLoading(true);
     fetch("/api/red-flags")
       .then(r => r.json())
       .then(data => { setFlags(data); setLoading(false); })
@@ -81,7 +97,7 @@ export default function RedFlagsPage() {
         What Labels Hide
       </h2>
       <p style={{ color: colors.textMed, fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
-        The tactics pet food companies use to make their products look better than they are.
+        The tactics pet food companies use to make their food products look better than they are.
       </p>
       <input
         type="text" placeholder="Search labeling tricks..."
@@ -118,7 +134,10 @@ export default function RedFlagsPage() {
                       <h4 style={{ fontSize: 13, fontWeight: 700, color: colors.text, margin: 0, lineHeight: 1.3 }}>
                         {flag.title}
                       </h4>
-                      <SeverityBadge severity={flag.severity} />
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                        <AppliesToBadge appliesTo={flag.appliesTo} />
+                        <SeverityBadge severity={flag.severity} />
+                      </div>
                     </div>
                     <p style={{ fontSize: 12, color: colors.textMed, lineHeight: 1.5, margin: 0 }}>{flag.description}</p>
                     <div style={{ padding: "8px 10px", background: colors.primaryLight, borderRadius: 8, marginTop: "auto" }}>
