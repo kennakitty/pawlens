@@ -59,6 +59,11 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
     return ["All", ...[...all].sort()];
   }, [products]);
 
+  // Scroll to top when entering product detail
+  useEffect(() => {
+    if (selectedProduct) window.scrollTo(0, 0);
+  }, [selectedProduct]);
+
   if (selectedProduct) {
     return (
       <ProductDetail
