@@ -245,6 +245,15 @@ function cleanFlavor(rawFlavor) {
     return null;
   }
 
+  // Normalize "and" to "&" between flavors
+  f = f.replace(/\band\b/gi, "&");
+
+  // Strip "Variety Pack" prefix/label
+  f = f.replace(/^Variety\s*(?:Pack(?:age)?)?:?\s*/i, "");
+  f = f.replace(/^-\s*Variety\s*(?:Pack)?:?\s*/i, "");
+  f = f.replace(/\bFlavors?:?\s*/gi, "");
+  f = f.replace(/\bincludes?:?\s*/gi, "");
+
   // Clean up artifacts
   f = f.replace(/\s+/g, " ");
   f = f.replace(/^[,;&\s]+/, "");
@@ -267,28 +276,47 @@ function cleanFlavor(rawFlavor) {
 }
 
 function extractFlavor(product) {
-  if (product.flavor) return cleanFlavor(cleanHtmlEntities(product.flavor));
-
-  const name = product.name || "";
-  // Try "Product - Flavor, ..." pattern
-  const dashMatch = name.match(/[-–—]\s*(.+?)(?:,\s*(?:Variety|Pack|\d))/i);
-  if (dashMatch) {
-    const flavor = dashMatch[1].trim();
-    if (flavor.length > 2 && flavor.length < 60) return flavor;
-  }
-
-  // Try known flavors in name
-  const lower = name.toLowerCase();
-  const flavors = [
-    "chicken", "turkey", "salmon", "tuna", "beef", "seafood", "fish",
-    "duck", "lamb", "ocean whitefish", "whitefish", "shrimp",
-    "poultry & beef", "poultry and beef",
-  ];
-  for (const f of flavors) {
-    if (lower.includes(f)) {
-      return f.split(" ").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
+  // If flavor exists and isn't just "Variety Pack", clean it
+  if (product.flavor && !/^(?:Variety\s*(?:Pack(?:age)?)?|-)?\s*$/i.test(product.flavor)) {
+    const cleaned = cleanFlavor(cleanHtmlEntities(product.flavor));
+    // If cleaning left something meaningful, return it
+    if (cleaned && cleaned.length > 1 && !/^Variety\s*(?:Pack)?$/i.test(cleaned)) {
+      return cleaned;
     }
   }
+
+  // No usable flavor — extract from product name
+  const name = product.name || "";
+
+  // Try to find flavor keywords after a dash: "Product - Chicken, Salmon, ..."
+  const dashMatch = name.match(/[-–—]\s*(.+?)(?:,\s*(?:Variety|Pack|\d))/i);
+  if (dashMatch) {
+    const flavor = cleanFlavor(dashMatch[1].trim());
+    if (flavor && flavor.length > 2 && flavor.length < 60) return flavor;
+  }
+
+  // Try comma-separated flavors in name like "Chicken, Salmon, Turkey Variety Pack"
+  const commaFlavors = name.match(/[-–—]\s*([A-Z][a-z]+(?:\s*[&,]\s*[A-Z][a-z]+)+)/);
+  if (commaFlavors) {
+    const flavor = cleanFlavor(commaFlavors[1].trim());
+    if (flavor && flavor.length > 2) return flavor;
+  }
+
+  // Try known flavor words in name
+  const lower = name.toLowerCase();
+  const knownFlavors = [
+    "poultry & beef", "chicken & turkey", "chicken & salmon", "salmon & chicken",
+    "tuna & salmon", "chicken & tuna", "seafood & chicken",
+    "chicken", "turkey", "salmon", "tuna", "beef", "seafood", "fish",
+    "duck", "lamb", "ocean whitefish", "whitefish", "shrimp", "mackerel",
+  ];
+  const found = [];
+  for (const f of knownFlavors) {
+    if (lower.includes(f) && !found.some(x => x.toLowerCase().includes(f) || f.includes(x.toLowerCase()))) {
+      found.push(f.split(" ").map(w => w[0].toUpperCase() + w.slice(1)).join(" "));
+    }
+  }
+  if (found.length > 0) return found.join(", ");
 
   return null;
 }

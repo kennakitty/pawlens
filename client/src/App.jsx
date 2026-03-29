@@ -45,10 +45,10 @@ export default function App() {
   ];
 
   return (
-    <div style={{ background: colors.bg, minHeight: "100vh", color: colors.text, fontFamily: "'Nunito', sans-serif" }}>
+    <div style={{ background: colors.bg, minHeight: "100vh", color: colors.text, fontFamily: "'Nunito', sans-serif", "--nav-height": "57px" }}>
       {/* ── Navigation ── */}
       <nav style={{
-        position: "sticky", top: 0, zIndex: 100,
+        position: "sticky", top: 0, zIndex: 100, height: 57, boxSizing: "border-box",
         background: "rgba(251,248,244,0.92)", backdropFilter: "blur(12px)",
         borderBottom: `1px solid ${colors.border}`, padding: "0 20px"
       }}>

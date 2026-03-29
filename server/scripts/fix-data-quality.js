@@ -515,6 +515,9 @@ function cleanDryFlavor(rawFlavor) {
   f = f.replace(/\bBlend\b/gi, "");
   f = f.replace(/\bKibble\+Raw\b/gi, "");
 
+  // Normalize "and" to "&" between flavors
+  f = f.replace(/\band\b/gi, "&");
+
   // Clean up artifacts
   f = f.replace(/\s+/g, " ");
   f = f.replace(/^[,;&\s]+/, "");

@@ -113,7 +113,7 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
 
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 20px" }}>
-      <div style={{ position: "sticky", top: 0, zIndex: 10, background: colors.bg, paddingTop: 8, paddingBottom: 8, marginLeft: -20, marginRight: -20, paddingLeft: 20, paddingRight: 20 }}>
+      <div style={{ position: "sticky", top: 57, zIndex: 10, background: colors.bg, paddingTop: 8, paddingBottom: 8, marginLeft: -20, marginRight: -20, paddingLeft: 20, paddingRight: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <h2 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 28, fontWeight: 700, color: colors.primary, margin: 0 }}>
             Browse All Cat Foods
