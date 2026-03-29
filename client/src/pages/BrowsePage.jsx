@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import colors from "../colors.js";
 import LifeStageBadge from "../LifeStageBadge.jsx";
 import FoodCategoryToggle from "../FoodCategoryToggle.jsx";
@@ -14,14 +14,31 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
   const [filterHealth, setFilterHealth] = useState("All");
   const [filterSort, setFilterSort] = useState("score-high");
   const [searchTerm, setSearchTerm] = useState("");
+  const scrollPosRef = useRef(0);
+  const selectedIdRef = useRef(null);
 
   useEffect(() => {
     setLoading(true);
     fetch(`/api/products?type=${foodCategory}`)
       .then(r => r.json())
-      .then(data => { setProducts(data); setLoading(false); })
+      .then(data => { setProducts(data); setLoading(false); window.scrollTo(0, 0); })
       .catch(() => { setError("Failed to load products."); setLoading(false); });
   }, [foodCategory]);
+
+  // Restore scroll position when returning from product detail
+  useEffect(() => {
+    if (!selectedProduct && selectedIdRef.current) {
+      requestAnimationFrame(() => {
+        const el = document.getElementById(`product-${selectedIdRef.current}`);
+        if (el) {
+          el.scrollIntoView({ block: "center" });
+        } else {
+          window.scrollTo(0, scrollPosRef.current);
+        }
+        selectedIdRef.current = null;
+      });
+    }
+  }, [selectedProduct]);
 
   // Build filter options dynamically from actual data
   // All hooks must be called before any conditional return (Rules of Hooks)
@@ -175,7 +192,7 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 16 }}>
             {filtered.map(p => (
-              <div key={p.id} onClick={() => setSelectedProduct(p)}
+              <div key={p.id} id={`product-${p.id}`} onClick={() => { scrollPosRef.current = window.scrollY; selectedIdRef.current = p.id; setSelectedProduct(p); }}
                 style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 22, cursor: "pointer", transition: "box-shadow 0.2s, transform 0.2s", boxShadow: "0 2px 12px rgba(44,62,58,0.06)" }}
                 onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 6px 24px rgba(44,62,58,0.12)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 12px rgba(44,62,58,0.06)"; e.currentTarget.style.transform = "none"; }}
