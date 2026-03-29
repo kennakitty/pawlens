@@ -514,6 +514,11 @@ function cleanDryFlavor(rawFlavor) {
   f = f.replace(/\bRecipe\b/gi, "");
   f = f.replace(/\bBlend\b/gi, "");
   f = f.replace(/\bKibble\+Raw\b/gi, "");
+  f = f.replace(/\bKibble \+ (?:Freeze Dried )?Raw,?\s*/gi, "");
+  f = f.replace(/,?\s*Corn Free/gi, "");
+  f = f.replace(/,?\s*Wheat Free/gi, "");
+  f = f.replace(/,?\s*Soy Free/gi, "");
+  f = f.replace(/,?\s*Potato Free/gi, "");
 
   // Normalize "and" to "&" between flavors
   f = f.replace(/\band\b/gi, "&");

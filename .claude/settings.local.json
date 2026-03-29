@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/mcken/Projects/PawLens -type f \\\\\\(-name *.csv -o -name *.json \\\\\\) ! -path */node_modules/* ! -path */dist/*)",
+      "Bash(\"/c/Users/mcken/.claude/plans/pawlens-exploration.txt\":*)",
+      "Read(//c/Users/mcken/.claude/plans/**)",
+      "Bash(find /c/Users/mcken/Projects/PawLens -type f -name *scrape* -o -name *crawl* -o -name *spider* -o -name *fetch*)",
+      "Bash(git log:*)",
+      "Bash(find C:UsersmckenProjectsPawLens -type f \\\\\\(-name *.js -o -name *.mjs -o -name *.ts -o -name *.jsx \\\\\\))",
+      "Bash(jq \".[] | {name, foodType, fullIngredients: \\(.fullIngredients | split\\(\"\",\"\"\\) | length\\), guaranteedAnalysis, calorieContent}\" server/data/petsmart-products.json)",
+      "Bash(wc -l C:/Users/mcken/Projects/PawLens/server/data/petsmart-*.json)",
+      "Bash(node -e \":*)"
+    ]
+  }
+}

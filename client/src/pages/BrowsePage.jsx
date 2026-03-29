@@ -195,7 +195,7 @@ export default function BrowsePage({ selectedProduct, setSelectedProduct, setPag
                   </div>
                 </div>
                 <h3 style={{ fontSize: 15, fontWeight: 600, color: colors.text, margin: "0 0 8px", lineHeight: 1.3 }}>{p.name}</h3>
-                {p.flavor && <p style={{ fontSize: 12, color: colors.textMed, margin: "0 0 8px" }}>{p.flavor}</p>}
+                {p.flavor && <p style={{ fontSize: 12, color: colors.textMed, margin: "0 0 8px" }}>{p.flavor.replace(/, /g, " • ").replace(/ \+ more/, " + more")}</p>}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8 }}>
                   {p.foodType && p.foodType.split(", ").map((ft, j) => (
                     <span key={j} style={{ padding: "2px 8px", background: colors.bg, borderRadius: 6, fontSize: 11, color: colors.textMed }}>{ft}</span>
