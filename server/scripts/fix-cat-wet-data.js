@@ -1,12 +1,12 @@
-// fix-wet-data.js — Clean and normalize wet cat food data
-// Run: node server/scripts/fix-wet-data.js
+// fix-cat-wet-data.js — Clean and normalize wet cat food data
+// Run: node server/scripts/fix-cat-wet-data.js
 
 import { readFileSync, writeFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const dataPath = join(__dirname, "../data/petsmart-wet-products.json");
+const dataPath = join(__dirname, "../data/products-petsmart-cat-wet.json");
 
 const products = JSON.parse(readFileSync(dataPath, "utf-8"));
 console.log(`Loaded ${products.length} wet food products`);
@@ -583,4 +583,4 @@ for (const [l, c] of Object.entries(stages).sort((a, b) => b[1] - a[1])) {
   console.log(`  ${l}: ${c}`);
 }
 
-console.log("\nDone! Fixed data written to petsmart-wet-products.json");
+console.log("\nDone! Fixed data written to products-petsmart-cat-wet.json");

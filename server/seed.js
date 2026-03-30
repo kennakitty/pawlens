@@ -49,19 +49,20 @@ function scoreProduct(p) {
 }
 
 function scoreUnscoredProducts() {
-  const allProducts = db.prepare("SELECT * FROM products WHERE transparencyScore IS NULL").all();
+  const allProducts = db.prepare("SELECT * FROM products_petsmart_cat_dry WHERE transparencyScore IS NULL").all();
   if (allProducts.length === 0) return;
-  const updateScore = db.prepare("UPDATE products SET transparencyScore = ? WHERE id = ?");
+  const updateScore = db.prepare("UPDATE products_petsmart_cat_dry SET transparencyScore = ? WHERE id = ?");
   db.exec("BEGIN");
   for (const p of allProducts) updateScore.run(scoreProduct(p), p.id);
   db.exec("COMMIT");
   console.log(`Scored ${allProducts.length} products`);
 }
 
+
 console.log("Checking database...");
 
 // ─── CHECK IF TABLES ALREADY HAVE DATA ──────────────────────────────────────
-const productCount = db.prepare("SELECT COUNT(*) as count FROM products").get().count;
+const productCount = db.prepare("SELECT COUNT(*) as count FROM products_petsmart_cat_dry").get().count;
 const ingredientCount = db.prepare("SELECT COUNT(*) as count FROM ingredients").get().count;
 const redFlagCount = db.prepare("SELECT COUNT(*) as count FROM red_flags").get().count;
 
@@ -72,11 +73,11 @@ if (productCount > 0 && ingredientCount > 0 && redFlagCount > 0) {
   // Senior life stage corrections
   const seniorFixNames = ["11+", "12+"];
   for (const tag of seniorFixNames) {
-    db.prepare("UPDATE products SET lifeStage = 'Senior (11+)' WHERE name LIKE ? AND lifeStage = 'Senior (7+)'")
+    db.prepare("UPDATE products_petsmart_cat_dry SET lifeStage = 'Senior (11+)' WHERE name LIKE ? AND lifeStage = 'Senior (7+)'")
       .run(`%${tag}%`);
   }
-  db.prepare("UPDATE products SET lifeStage = 'Senior (7+)' WHERE lifeStage = 'Adult' AND name LIKE '%Senior%' AND name NOT LIKE '%11+%'").run();
-  db.prepare("UPDATE products SET lifeStage = 'Senior (11+)' WHERE lifeStage = 'Adult' AND name LIKE '%Senior%' AND name LIKE '%11+%'").run();
+  db.prepare("UPDATE products_petsmart_cat_dry SET lifeStage = 'Senior (7+)' WHERE lifeStage = 'Adult' AND name LIKE '%Senior%' AND name NOT LIKE '%11+%'").run();
+  db.prepare("UPDATE products_petsmart_cat_dry SET lifeStage = 'Senior (11+)' WHERE lifeStage = 'Adult' AND name LIKE '%Senior%' AND name LIKE '%11+%'").run();
 
   // Ingredient rating upgrades (great tier)
   const greatIngredients = [
@@ -91,53 +92,67 @@ if (productCount > 0 && ingredientCount > 0 && redFlagCount > 0) {
     db.prepare("UPDATE ingredients SET rating = 'good' WHERE name = ? AND rating = 'great'").run(name);
   }
 
-  // ─── Wet product seeding (check separately from dry) ─────────────────────
-  const wetCount = db.prepare("SELECT COUNT(*) as count FROM products WHERE type = 'Wet'").get().count;
+  // ─── Wet product seeding (separate table) ─────────────────────────────────
+  const wetCount = db.prepare("SELECT COUNT(*) as count FROM products_petsmart_cat_wet").get().count;
   if (wetCount === 0) {
-    const wetPath = join(__dirname, "data/petsmart-wet-products.json");
+    const wetPath = join(__dirname, "data/products-petsmart-cat-wet.json");
     try {
       const wetProducts = JSON.parse(readFileSync(wetPath, "utf-8"));
-      const insertProduct = db.prepare(`
-        INSERT INTO products (
-          name, brand, sku, petsmartUrl, imageUrl, gtin13,
-          type, retailer, lifeStage, foodType, breed, flavor,
-          fullIngredients, guaranteedAnalysis, calorieContent, aafco,
-          nutritionalOptions, healthConsiderations,
+      const insertWetProduct = db.prepare(`
+        INSERT INTO products_petsmart_cat_wet (
+          name, brand, sku, petsmartUrl, imageUrl, gtin13, itemNumber,
+          type, retailer, lifeStage, foodType, foodConsistency, breed, flavor, species,
+          packageType, weight, packageWeight,
+          fullIngredients, guaranteedAnalysis, calorieContent, aafco, primaryIngredient,
+          nutritionalOptions, healthConsiderations, intendedFor,
           benefits, description, directions,
+          flavorVariants, sizeVariants,
           extraAttributes, lastUpdated
         ) VALUES (
-          @name, @brand, @sku, @petsmartUrl, @imageUrl, @gtin13,
-          @type, @retailer, @lifeStage, @foodType, @breed, @flavor,
-          @fullIngredients, @guaranteedAnalysis, @calorieContent, @aafco,
-          @nutritionalOptions, @healthConsiderations,
+          @name, @brand, @sku, @petsmartUrl, @imageUrl, @gtin13, @itemNumber,
+          @type, @retailer, @lifeStage, @foodType, @foodConsistency, @breed, @flavor, @species,
+          @packageType, @weight, @packageWeight,
+          @fullIngredients, @guaranteedAnalysis, @calorieContent, @aafco, @primaryIngredient,
+          @nutritionalOptions, @healthConsiderations, @intendedFor,
           @benefits, @description, @directions,
+          @flavorVariants, @sizeVariants,
           @extraAttributes, @lastUpdated
         )
       `);
       db.exec("BEGIN");
       for (const p of wetProducts) {
-        insertProduct.run(serializeProduct({
+        insertWetProduct.run(serializeProduct({
           name: p.name || "Unknown",
           brand: p.brand || null,
           sku: p.sku || null,
           petsmartUrl: p.productURL || null,
           imageUrl: p.imageUrl || null,
           gtin13: p.gtin13 || null,
+          itemNumber: p.itemNumber || null,
           type: "Wet",
           retailer: "PetSmart",
           lifeStage: p.lifeStage || null,
           foodType: p.foodType || null,
+          foodConsistency: p.foodConsistency || null,
           breed: p.breed || null,
           flavor: p.flavor || null,
+          species: p.species || null,
+          packageType: p.packageType || null,
+          weight: p.weight || null,
+          packageWeight: p.packageWeight || null,
           fullIngredients: p.fullIngredients || null,
           guaranteedAnalysis: p.guaranteedAnalysis || null,
           calorieContent: p.calorieContent || null,
           aafco: p.aafco || null,
+          primaryIngredient: p.primaryIngredient || null,
           nutritionalOptions: p.nutritionalOptions || [],
           healthConsiderations: p.healthConsiderations || [],
+          intendedFor: p.intendedFor || null,
           benefits: p.benefits || [],
           description: p.description || null,
           directions: p.directions || null,
+          flavorVariants: p.flavorVariants || [],
+          sizeVariants: p.sizeVariants || [],
           extraAttributes: p.extraAttributes || {},
           lastUpdated: p.lastUpdated || new Date().toISOString(),
         }));
@@ -145,11 +160,10 @@ if (productCount > 0 && ingredientCount > 0 && redFlagCount > 0) {
       db.exec("COMMIT");
       console.log(`Seeded ${wetProducts.length} wet food products`);
 
-      // Score wet products
-      scoreUnscoredProducts();
+      // Scoring is done separately via: node server/score-cat-wet.js
     } catch (e) {
       if (e.code === "ENOENT") {
-        console.log("No wet food data file found (petsmart-wet-products.json). Skipping wet products.");
+        console.log("No wet food data file found (products-petsmart-cat-wet.json). Skipping wet products.");
       } else throw e;
     }
   }
@@ -196,11 +210,11 @@ console.log("Seeding database...");
 
 // ─── PRODUCTS ────────────────────────────────────────────────────────────────
 if (productCount === 0) {
-  const dataPath = join(__dirname, "data/petsmart-products.json");
+  const dataPath = join(__dirname, "data/products-petsmart-cat-dry.json");
   const products = JSON.parse(readFileSync(dataPath, "utf-8"));
 
   const insertProduct = db.prepare(`
-    INSERT INTO products (
+    INSERT INTO products_petsmart_cat_dry (
       name, brand, sku, petsmartUrl, imageUrl, gtin13,
       type, retailer, lifeStage, foodType, breed, flavor,
       fullIngredients, guaranteedAnalysis, calorieContent, aafco,
@@ -370,12 +384,12 @@ const seniorFixes = [
   { lifeStage: "Senior (11+)", match: "%Mature 12+%" },
 ];
 for (const fix of seniorFixes) {
-  db.prepare("UPDATE products SET lifeStage = ? WHERE name LIKE ? AND lifeStage != ?")
+  db.prepare("UPDATE products_petsmart_cat_dry SET lifeStage = ? WHERE name LIKE ? AND lifeStage != ?")
     .run(fix.lifeStage, fix.match, fix.lifeStage);
 }
 // Senior products incorrectly tagged as Adult
-db.prepare("UPDATE products SET lifeStage = 'Senior (7+)' WHERE lifeStage = 'Adult' AND name LIKE '%Senior%' AND name NOT LIKE '%11+%'").run();
-db.prepare("UPDATE products SET lifeStage = 'Senior (11+)' WHERE lifeStage = 'Adult' AND name LIKE '%Senior%' AND name LIKE '%11+%'").run();
+db.prepare("UPDATE products_petsmart_cat_dry SET lifeStage = 'Senior (7+)' WHERE lifeStage = 'Adult' AND name LIKE '%Senior%' AND name NOT LIKE '%11+%'").run();
+db.prepare("UPDATE products_petsmart_cat_dry SET lifeStage = 'Senior (11+)' WHERE lifeStage = 'Adult' AND name LIKE '%Senior%' AND name LIKE '%11+%'").run();
 
 // ─── Ingredient rating upgrades (great tier) ─────────────────────────────────
 const greatIngredients = [

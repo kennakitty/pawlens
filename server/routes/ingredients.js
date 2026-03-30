@@ -34,15 +34,18 @@ router.get("/:id/products", (req, res) => {
 
   // Search fullIngredients text for the ingredient name (case-insensitive via LIKE)
   const { type } = req.query;
-  let query = "SELECT id, name, brand, imageUrl, transparencyScore, lifeStage, type FROM products WHERE fullIngredients LIKE ?";
-  const params = [`%${ingredient.name}%`];
-  if (type && type !== "All") {
-    query += " AND type = ?";
-    params.push(type);
+  const table = type === "Wet" ? "products_petsmart_cat_wet" : type === "Dry" ? "products_petsmart_cat_dry" : null;
+
+  if (table) {
+    const query = `SELECT id, name, brand, imageUrl, transparencyScore, lifeStage, type FROM ${table} WHERE fullIngredients LIKE ? ORDER BY brand, name`;
+    const rows = db.prepare(query).all(`%${ingredient.name}%`);
+    res.json(rows);
+  } else {
+    // Search both tables
+    const dry = db.prepare("SELECT id, name, brand, imageUrl, transparencyScore, lifeStage, type FROM products_petsmart_cat_dry WHERE fullIngredients LIKE ? ORDER BY brand, name").all(`%${ingredient.name}%`);
+    const wet = db.prepare("SELECT id, name, brand, imageUrl, transparencyScore, lifeStage, type FROM products_petsmart_cat_wet WHERE fullIngredients LIKE ? ORDER BY brand, name").all(`%${ingredient.name}%`);
+    res.json([...dry, ...wet]);
   }
-  query += " ORDER BY brand, name";
-  const rows = db.prepare(query).all(...params);
-  res.json(rows);
 });
 
 // POST /api/ingredients (admin)

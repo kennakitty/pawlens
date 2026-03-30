@@ -17,8 +17,9 @@ router.post("/", async (req, res) => {
     });
   }
 
-  // Fetch products of the selected food category
-  const products = db.prepare("SELECT * FROM products WHERE type = ? ORDER BY brand, name").all(foodCategory).map(parseProduct);
+  // Fetch products from the correct table based on food category
+  const table = foodCategory === "Wet" ? "products_petsmart_cat_wet" : "products_petsmart_cat_dry";
+  const products = db.prepare(`SELECT * FROM ${table} ORDER BY brand, name`).all().map(parseProduct);
 
   // Build compact product catalog (name, brand, key stats only — no full ingredients)
   const productCatalog = products

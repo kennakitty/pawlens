@@ -1,5 +1,5 @@
-// fix-data-quality.js — Fix data quality issues in petsmart-products.json
-// Run: node server/scripts/fix-data-quality.js
+// fix-cat-dry-data.js — Fix data quality issues in products-petsmart-cat-dry.json
+// Run: node server/scripts/fix-cat-dry-data.js
 //
 // Fixes:
 // 1. Benefits: split concatenated strings into proper arrays
@@ -14,14 +14,14 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const dataPath = join(__dirname, "../data/petsmart-products.json");
-const backupPath = join(__dirname, "../data/petsmart-products.backup.json");
+const dataPath = join(__dirname, "../data/products-petsmart-cat-dry.json");
+const backupPath = join(__dirname, "../data/products-petsmart-cat-dry.backup.json");
 
 const products = JSON.parse(readFileSync(dataPath, "utf-8"));
 
 // Back up original
 writeFileSync(backupPath, JSON.stringify(products, null, 2));
-console.log(`Backed up ${products.length} products to petsmart-products.backup.json`);
+console.log(`Backed up ${products.length} products to products-petsmart-cat-dry.backup.json`);
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Counters for reporting
@@ -777,4 +777,4 @@ console.log(`Benefits still 1:  ${benefitsSingle} / ${products.length}`);
 console.log(`AAFCO populated:   ${aafcoReal} / ${products.length}`);
 console.log(`AAFCO empty:       ${aafcoEmpty} / ${products.length}`);
 
-console.log("\nDone! Fixed data written to petsmart-products.json");
+console.log("\nDone! Fixed data written to products-petsmart-cat-dry.json");

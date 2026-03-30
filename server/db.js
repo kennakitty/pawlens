@@ -9,7 +9,7 @@ const db = new Database(DB_PATH);
 
 // Create all tables if they don't exist yet
 db.exec(`
-  CREATE TABLE IF NOT EXISTS products (
+  CREATE TABLE IF NOT EXISTS products_petsmart_cat_dry (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
     -- Identity & source
@@ -43,7 +43,83 @@ db.exec(`
     description TEXT,
     directions TEXT,
 
+    -- Additional product attributes
+    weight TEXT,
+    itemNumber TEXT,
+    species TEXT,
+    flavorVariants TEXT,
+    sizeVariants TEXT,
+    foodConsistency TEXT,
+    packageWeight TEXT,
+    intendedFor TEXT,
+    primaryIngredient TEXT,
+    packageType TEXT,
+
     -- Dynamic attributes (catches any extra headings not in fixed columns)
+    extraAttributes TEXT,
+
+    -- PawLens-specific (populated later / manually)
+    transparencyScore REAL,
+    concerns TEXT,
+    bestFor TEXT,
+    avoid TEXT,
+    keyFeatures TEXT,
+    recallHistory TEXT,
+    country TEXT,
+
+    -- Metadata
+    lastUpdated TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS products_petsmart_cat_wet (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    -- Identity & source
+    name TEXT NOT NULL,
+    brand TEXT,
+    sku TEXT,
+    petsmartUrl TEXT,
+    imageUrl TEXT,
+    gtin13 TEXT,
+    itemNumber TEXT,
+
+    -- Classification
+    type TEXT DEFAULT 'Wet',
+    retailer TEXT DEFAULT 'PetSmart',
+    lifeStage TEXT,
+    foodType TEXT,
+    foodConsistency TEXT,
+    breed TEXT,
+    flavor TEXT,
+    species TEXT,
+
+    -- Packaging
+    packageType TEXT,
+    weight TEXT,
+    packageWeight TEXT,
+
+    -- Nutrition (all stored as raw text, no parsed numbers)
+    fullIngredients TEXT,
+    guaranteedAnalysis TEXT,
+    calorieContent TEXT,
+    aafco TEXT,
+    primaryIngredient TEXT,
+
+    -- Product attributes (from PetSmart attribute section)
+    nutritionalOptions TEXT,
+    healthConsiderations TEXT,
+    intendedFor TEXT,
+
+    -- Content
+    benefits TEXT,
+    description TEXT,
+    directions TEXT,
+
+    -- Variants
+    flavorVariants TEXT,
+    sizeVariants TEXT,
+
+    -- Dynamic attributes (catches any field not in fixed columns)
     extraAttributes TEXT,
 
     -- PawLens-specific (populated later / manually)
@@ -81,14 +157,25 @@ db.exec(`
   );
 `);
 
-// Migration: add appliesTo columns to existing databases that don't have them
+// Migrations: add columns to existing databases that don't have them
 try { db.exec("ALTER TABLE ingredients ADD COLUMN appliesTo TEXT DEFAULT 'both'"); } catch {}
 try { db.exec("ALTER TABLE red_flags ADD COLUMN appliesTo TEXT DEFAULT 'both'"); } catch {}
+try { db.exec("ALTER TABLE products_petsmart_cat_dry ADD COLUMN weight TEXT"); } catch {}
+try { db.exec("ALTER TABLE products_petsmart_cat_dry ADD COLUMN itemNumber TEXT"); } catch {}
+try { db.exec("ALTER TABLE products_petsmart_cat_dry ADD COLUMN species TEXT"); } catch {}
+try { db.exec("ALTER TABLE products_petsmart_cat_dry ADD COLUMN flavorVariants TEXT"); } catch {}
+try { db.exec("ALTER TABLE products_petsmart_cat_dry ADD COLUMN sizeVariants TEXT"); } catch {}
+try { db.exec("ALTER TABLE products_petsmart_cat_dry ADD COLUMN foodConsistency TEXT"); } catch {}
+try { db.exec("ALTER TABLE products_petsmart_cat_dry ADD COLUMN packageWeight TEXT"); } catch {}
+try { db.exec("ALTER TABLE products_petsmart_cat_dry ADD COLUMN intendedFor TEXT"); } catch {}
+try { db.exec("ALTER TABLE products_petsmart_cat_dry ADD COLUMN primaryIngredient TEXT"); } catch {}
+try { db.exec("ALTER TABLE products_petsmart_cat_dry ADD COLUMN packageType TEXT"); } catch {}
 
 // JSON array fields that get parsed when reading from DB
 const JSON_ARRAY_FIELDS = [
   "nutritionalOptions", "healthConsiderations", "benefits",
-  "concerns", "bestFor", "avoid", "keyFeatures"
+  "concerns", "bestFor", "avoid", "keyFeatures",
+  "flavorVariants", "sizeVariants"
 ];
 
 // JSON object fields

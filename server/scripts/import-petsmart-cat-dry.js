@@ -4,19 +4,19 @@ import { dirname, join } from "path";
 import db, { serializeProduct } from "../db.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DATA_PATH = join(__dirname, "../data/petsmart-products.json");
+const DATA_PATH = join(__dirname, "../data/products-petsmart-cat-dry.json");
 
 console.log("Reading product data...");
 const products = JSON.parse(readFileSync(DATA_PATH, "utf-8"));
 console.log(`Found ${products.length} products to import.`);
 
 // Clear existing products
-db.prepare("DELETE FROM products").run();
+db.prepare("DELETE FROM products_petsmart_cat_dry").run();
 console.log("Cleared existing products.");
 
 // Prepare insert statement
 const insert = db.prepare(`
-  INSERT INTO products (
+  INSERT INTO products_petsmart_cat_dry (
     name, brand, sku, petsmartUrl, imageUrl, gtin13,
     type, retailer, lifeStage, foodType, breedSize, flavor,
     fullIngredients, guaranteedAnalysis, calorieContent, aafco,
@@ -72,11 +72,11 @@ const count = importAll(products);
 console.log(`Successfully imported ${count} products.`);
 
 // Verify
-const total = db.prepare("SELECT COUNT(*) as count FROM products").get();
+const total = db.prepare("SELECT COUNT(*) as count FROM products_petsmart_cat_dry").get();
 console.log(`Database now has ${total.count} products.`);
 
 // Show brand breakdown
-const brands = db.prepare("SELECT brand, COUNT(*) as count FROM products GROUP BY brand ORDER BY count DESC").all();
+const brands = db.prepare("SELECT brand, COUNT(*) as count FROM products_petsmart_cat_dry GROUP BY brand ORDER BY count DESC").all();
 console.log("\nBrand breakdown:");
 for (const b of brands) {
   console.log(`  ${b.brand}: ${b.count}`);

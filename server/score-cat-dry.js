@@ -1,6 +1,6 @@
-// score.js — Calculate transparency scores for all products
+// score-cat-dry.js — Calculate transparency scores for all dry cat food products
 // Scores 0-100 based on ingredient quality, label transparency, and nutritional data
-// Run: node server/score.js
+// Run: node server/score-cat-dry.js
 import db from "./db.js";
 
 // ─── Ingredient quality signals ──────────────────────────────────────────────
@@ -98,8 +98,8 @@ function scoreProduct(product) {
 }
 
 // ─── Run scoring ─────────────────────────────────────────────────────────────
-const products = db.prepare("SELECT * FROM products").all();
-const update = db.prepare("UPDATE products SET transparencyScore = ? WHERE id = ?");
+const products = db.prepare("SELECT * FROM products_petsmart_cat_dry").all();
+const update = db.prepare("UPDATE products_petsmart_cat_dry SET transparencyScore = ? WHERE id = ?");
 
 db.exec("BEGIN");
 let scored = 0;
@@ -111,15 +111,15 @@ for (const p of products) {
 db.exec("COMMIT");
 
 // Show distribution
-const dist = db.prepare("SELECT MIN(transparencyScore) as min, MAX(transparencyScore) as max, AVG(transparencyScore) as avg FROM products").get();
+const dist = db.prepare("SELECT MIN(transparencyScore) as min, MAX(transparencyScore) as max, AVG(transparencyScore) as avg FROM products_petsmart_cat_dry").get();
 console.log(`Scored ${scored} products.`);
 console.log(`Distribution: min=${dist.min}, max=${dist.max}, avg=${Math.round(dist.avg)}`);
 
 // Show some examples
-const examples = db.prepare("SELECT name, brand, transparencyScore FROM products ORDER BY transparencyScore DESC LIMIT 5").all();
+const examples = db.prepare("SELECT name, brand, transparencyScore FROM products_petsmart_cat_dry ORDER BY transparencyScore DESC LIMIT 5").all();
 console.log("\nTop 5:");
 examples.forEach(p => console.log(`  ${p.transparencyScore} — ${p.name} (${p.brand})`));
 
-const bottom = db.prepare("SELECT name, brand, transparencyScore FROM products ORDER BY transparencyScore ASC LIMIT 5").all();
+const bottom = db.prepare("SELECT name, brand, transparencyScore FROM products_petsmart_cat_dry ORDER BY transparencyScore ASC LIMIT 5").all();
 console.log("\nBottom 5:");
 bottom.forEach(p => console.log(`  ${p.transparencyScore} — ${p.name} (${p.brand})`));
