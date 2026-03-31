@@ -5,9 +5,11 @@
 - **Scraper and normalizer review:** The dry food data was originally scraped via HTML parsing (LD+JSON + RSC payloads) and processed through `fix-cat-dry-data.js` and the normalizer. Before any dry food re-scrape, review these tools against the same standards established for wet food scraping — verify they capture all tab data, don't modify explicitly labeled data, and don't make assumptions.
 
 ## Wet Food Re-scrape
-- See plan at `/home/fervor/.claude/plans/temporal-strolling-frost.md`
-- Scraper needs full Playwright rewrite to click through all tabs
+- Create `scrape-petsmart.js` using Playwright to visit each page, click all tabs, click all flavor variants
 - See `PETSMART-PAGE-STRUCTURE.md` for page structure reference
+- Test on 10 products first, then full scrape (~3-5 hours)
+- Score with `node server/score-cat-wet.js` after seeding
+- Output: `server/data/products-petsmart-cat-wet.json`
 
 ## Products API Route (`server/routes/products.js`)
 - Currently accepts `type=Dry` or `type=Wet` to pick the correct table
