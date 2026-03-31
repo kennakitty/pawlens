@@ -54,6 +54,40 @@ These rules exist because Claude violated them and it cost hours of wasted work,
 ### Do NOT override Kenna's decisions
 - If Kenna has explicitly decided on an approach, follow it — do not substitute your own judgment
 - If you disagree, explain why and ask — don't silently do something different
+- **Why this exists:** Kenna decided wet and dry food should be stored in separate tables. Claude ignored this and put them in one table, then had to redo the work.
+
+### Do the research before recommending
+- Never suggest an approach without researching alternatives and comparing them
+- Always present the best and most accurate option, not the fastest or easiest
+- If Kenna, who is not a developer, can identify a better approach, the recommendation was not researched properly
+- **Why this exists:** Claude suggested the Algolia API for scraping without researching whether it would produce the same quality data as the browser-based approach Kenna had already designed. Kenna caught the quality gap — Claude should have.
+
+### Answer questions before doing work
+- Always answer Kenna's questions fully before making any code changes
+- Always explain what changes are being made and why — don't make silent changes
+- Show the question/comment and the response before showing tool calls
+
+### Never modify dry food data or processes without being asked
+- The dry food data and scraper are established and working
+- Don't touch dry food files, tables, or processes while working on wet food
+- If something needs changing in dry food, flag it in FUTURE-PLANS.md
+
+### Never create post-hoc fix scripts to patch bad data
+- Every fix script created during this project introduced new problems
+- If data is wrong, fix the scraper — not the data
+- No "mismatch detection", "ingredient clearing", or "normalization" scripts that modify scraped data based on assumptions
+- **Why this exists:** A "flavor/ingredient mismatch" script deleted correct ingredient data from products. A normalizer modified explicitly labeled flavors. Both caused data loss.
+
+### Verify commits are cohesive with the current plan
+- Before committing, think about each file: does it make sense given what's being replaced or redone?
+- Don't commit tools built for old data alongside infrastructure for new data
+- Check that every committed file serves the current or future state, not a dead workflow
+- **Why this exists:** verify-cat-flavors.js and fix-cat-wet-data.js were committed alongside the new infrastructure even though both were built for old Algolia data that's being thrown out.
+
+### Think at a higher level
+- Every decision should account for reuse, discoverability, and future features (dog food, other retailers, other collaborators)
+- Don't just solve the immediate task — consider who else will need this and when
+- **Why this exists:** Claude saved PetSmart page structure knowledge to memory instead of a project file, which would have required rediscovering it for dog food scraping.
 
 ## Key Design Principles
 1. **AI must think outside the box** — proactively suggest creative feeding strategies (mixing foods, rotation feeding, microchip-activated feeders for multi-cat households, timed feeders, puzzle feeders)
