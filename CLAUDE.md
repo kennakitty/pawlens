@@ -70,7 +70,7 @@ These rules exist because Claude violated them and it cost hours of wasted work,
 ### Never modify dry food data or processes without being asked
 - The dry food data and scraper are established and working
 - Don't touch dry food files, tables, or processes while working on wet food
-- If something needs changing in dry food, flag it in FUTURE-PLANS.md
+- If something needs changing in dry food, flag it in ROADMAP.md
 
 ### Never create post-hoc fix scripts to patch bad data
 - Every fix script created during this project introduced new problems
